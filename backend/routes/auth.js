@@ -79,7 +79,10 @@ router.post('/forgot-password', async (req, res) => {
     // Email options
     const msg = {
       to: email,
-      from: 'autorevop@gmail.com',
+      from: {
+        email: 'support@autorevop.com',
+        name: 'Auto RevOp Support'
+      },
       subject: 'Password Reset Code - Auto RevOp',
       text: `You requested a password reset for your Auto RevOp account.\n\nUse this 6-digit code to reset your password: ${resetToken}\n\nThis code expires in 1 hour.\n\nIf you didn't request this reset, please ignore this email.`,
       html: `
