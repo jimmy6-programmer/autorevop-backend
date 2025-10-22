@@ -1,6 +1,7 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
+const sgMail = require('@sendgrid/mail');
 const crypto = require('crypto');
 const User = require('../models/User');
 const Booking = require('../models/Booking');
@@ -72,32 +73,41 @@ router.post('/forgot-password', async (req, res) => {
     user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
     await user.save();
 
-    // Create transporter
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-      port: parseInt(process.env.EMAIL_PORT) || 587,
-      secure: process.env.EMAIL_SECURE === 'true', // true for 465, false for other ports
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
+    // Set SendGrid API key
+    sgMail.setApiKey(process.env.EMAIL_PASS);
 
     // Email options
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
+    const msg = {
       to: email,
-      subject: 'Password Reset Code',
-      text: `You requested a password reset. Use this 6-digit code to reset your password: ${resetToken}\n\nThis code expires in 1 hour.`,
-      html: `<p>You requested a password reset.</p><p>Use this 6-digit code to reset your password: <strong>${resetToken}</strong></p><p>This code expires in 1 hour.</p>`,
+      from: {
+        email: 'noreply@autorevop.com',
+        name: 'Auto RevOp'
+      },
+      subject: 'Password Reset Code - Auto RevOp',
+      text: `You requested a password reset for your Auto RevOp account.\n\nUse this 6-digit code to reset your password: ${resetToken}\n\nThis code expires in 1 hour.\n\nIf you didn't request this reset, please ignore this email.`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #333;">Password Reset - Auto RevOp</h2>
+          <p>You requested a password reset for your Auto RevOp account.</p>
+          <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0;">
+            <h3 style="color: #007bff; margin: 0; font-size: 24px;">${resetToken}</h3>
+            <p style="margin: 10px 0 0 0; color: #666;">Your 6-digit reset code</p>
+          </div>
+          <p><strong>This code expires in 1 hour.</strong></p>
+          <p>If you didn't request this reset, please ignore this email.</p>
+          <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+          <p style="color: #666; font-size: 12px;">Auto RevOp - Your trusted automotive marketplace</p>
+        </div>
+      `,
     };
 
     // Send email
     try {
-      await transporter.sendMail(mailOptions);
-      res.json({ message: 'Password reset email sent' });
+      await sgMail.send(msg);
+      console.log(`Password reset email sent successfully to: ${email}`);
+      res.json({ message: 'Password reset email sent successfully' });
     } catch (emailError) {
-      console.error('Email sending failed:', emailError.message);
+      console.error('SendGrid email sending failed:', emailError.message);
       // For testing, return the token if email fails
       res.json({ message: 'Password reset token generated (email failed)', token: resetToken });
     }
