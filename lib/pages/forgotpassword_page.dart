@@ -46,18 +46,16 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                 ),
                 actions: [
                   CupertinoDialogAction(
-                    child: Text('OK'),
+                    child: Text('Continue'),
                     onPressed: () {
-                      Navigator.of(context).pop();
-                      // Check if still mounted before navigation
-                      if (mounted) {
-                        Navigator.push(
-                          context,
-                          CupertinoPageRoute(
-                            builder: (context) => const ResetPasswordPage(),
-                          ),
-                        );
-                      }
+                      Navigator.of(context).pop(); // Close dialog
+                      // Navigate to reset password page
+                      Navigator.push(
+                        context,
+                        CupertinoPageRoute(
+                          builder: (context) => const ResetPasswordPage(),
+                        ),
+                      );
                     },
                   ),
                 ],
@@ -78,8 +76,8 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
           ScaffoldMessenger.of(context).showSnackBar(snackBar);
 
-          Future.delayed(const Duration(seconds: 2), () {
-            // Check if still mounted before navigation
+          // Navigate immediately to reset password page
+          Future.delayed(const Duration(seconds: 1), () {
             if (mounted) {
               Navigator.push(
                 context,
