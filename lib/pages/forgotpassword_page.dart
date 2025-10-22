@@ -48,8 +48,8 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                   CupertinoDialogAction(
                     child: Text('Continue'),
                     onPressed: () {
+                      // Close dialog and navigate in one action
                       Navigator.of(context).pop(); // Close dialog
-                      // Navigate to reset password page
                       Navigator.push(
                         context,
                         CupertinoPageRoute(
