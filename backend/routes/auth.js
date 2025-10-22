@@ -80,7 +80,7 @@ router.post('/forgot-password', async (req, res) => {
     const msg = {
       to: email,
       from: {
-        email: 'noreply@autorevop.com',
+        email: 'autorevop@gmail.com',
         name: 'Auto RevOp'
       },
       subject: 'Password Reset Code - Auto RevOp',
