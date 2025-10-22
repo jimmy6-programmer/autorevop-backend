@@ -1,10 +1,13 @@
-import 'package:auto_solutions/widgets/adaptive_button.dart';
+
+import '../widgets/adaptive_button.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../utils/api_utils.dart'; // For getApiBaseUrl
+import '../utils/auth_utils.dart'; // For authentication utilities
+import 'translations.dart';
 
 class ProfilePage extends StatefulWidget {
   final Map<String, String> translations;
@@ -21,6 +24,7 @@ class _ProfilePageState extends State<ProfilePage> {
   String _email = "Loading...";
   String _phone = "Loading...";
   bool _isLoading = true;
+  bool _isLoggedIn = false;
 
   @override
   void initState() {
@@ -29,13 +33,28 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _fetchUserDetails() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
+    final isLoggedIn = await AuthUtils.isLoggedIn();
 
-    if (token == null) {
-      // Handle no token, maybe navigate to login
+    if (!isLoggedIn) {
       setState(() {
         _isLoading = false;
+        _isLoggedIn = false;
+        _fullName = "Not logged in";
+        _email = "Not logged in";
+        _phone = "Not logged in";
+        _country = "Not logged in";
+      });
+      return;
+    }
+
+    // User is logged in, fetch details
+    final userData = await AuthUtils.getUserData();
+    final token = await AuthUtils.getToken();
+
+    if (token == null) {
+      setState(() {
+        _isLoading = false;
+        _isLoggedIn = false;
         _fullName = "Not logged in";
         _email = "Not logged in";
         _phone = "Not logged in";
@@ -51,30 +70,35 @@ class _ProfilePageState extends State<ProfilePage> {
       );
 
       if (response.statusCode == 200) {
-        final userData = json.decode(response.body);
+        final apiUserData = json.decode(response.body);
         setState(() {
-          _fullName = userData['name'] ?? "Unknown";
-          _email = userData['email'] ?? "Unknown";
-          _phone = userData['phone'] ?? "Not provided";
-          _country = userData['country'] ?? "Not provided";
+          _isLoggedIn = true;
+          _fullName = apiUserData['name'] ?? userData?['name'] ?? "Unknown";
+          _email = apiUserData['email'] ?? userData?['email'] ?? "Unknown";
+          _phone = apiUserData['phone'] ?? "Not provided";
+          _country = apiUserData['country'] ?? "Not provided";
           _isLoading = false;
         });
       } else {
+        // Fallback to stored user data if API fails
         setState(() {
+          _isLoggedIn = true;
+          _fullName = userData?['name'] ?? "Unknown";
+          _email = userData?['email'] ?? "Unknown";
+          _phone = "Not provided";
+          _country = "Not provided";
           _isLoading = false;
-          _fullName = "Error loading";
-          _email = "Error loading";
-          _phone = "Error loading";
-          _country = "Error loading";
         });
       }
     } catch (e) {
+      // Fallback to stored user data if API fails
       setState(() {
+        _isLoggedIn = true;
+        _fullName = userData?['name'] ?? "Unknown";
+        _email = userData?['email'] ?? "Unknown";
+        _phone = "Not provided";
+        _country = "Not provided";
         _isLoading = false;
-        _fullName = "Error loading";
-        _email = "Error loading";
-        _phone = "Error loading";
-        _country = "Error loading";
       });
     }
   }
@@ -87,7 +111,7 @@ class _ProfilePageState extends State<ProfilePage> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            const SizedBox(height: 40),
+            const SizedBox(height: 80),
             // Profile Header
             Row(
               children: [
@@ -124,34 +148,87 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
             const SizedBox(height: 20),
 
-            // Profile details card
-            Card(
-              color: Colors.grey[100],
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              child: Column(
-                children: [
-                  _buildDetailRow(widget.translations['fullName'] ?? 'Name', _fullName),
-                  const Divider(height: 0),
-                  _buildDetailRow(widget.translations['email'] ?? 'Email account', _email),
-                  const Divider(height: 0),
-                  _buildDetailRow(widget.translations['phoneNumber'] ?? 'Mobile number', _phone.isEmpty ? "Add number" : _phone),
-                  const Divider(height: 0),
-                  _buildDetailRow(widget.translations['country'] ?? 'Country', _country),
-                ],
+            // Profile details card - only show if logged in
+            if (_isLoggedIn) ...[
+              Card(
+                color: Colors.grey[100],
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                child: Column(
+                  children: [
+                    _buildDetailRow(widget.translations['fullName'] ?? 'Name', _fullName),
+                    const Divider(height: 0),
+                    _buildDetailRow(widget.translations['email'] ?? 'Email account', _email),
+                    const Divider(height: 0),
+                    _buildDetailRow(widget.translations['phoneNumber'] ?? 'Mobile number', _phone.isEmpty ? "Add number" : _phone),
+                    const Divider(height: 0),
+                    _buildDetailRow(widget.translations['country'] ?? 'Country', _country),
+                  ],
+                ),
               ),
-            ),
+              const SizedBox(height: 30),
+            ] else ...[
+              // Show welcome message for not logged in users
+              Card(
+                color: Colors.grey[100],
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    children: [
+                      Icon(
+                        CupertinoIcons.person_circle,
+                        size: 60,
+                        color: Colors.grey[600],
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        widget.translations['welcomeMessage'] ?? 'Welcome to Auto RevOp',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        widget.translations['loginPrompt'] ?? 'Please login to view your profile and manage your account.',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.black54,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 30),
+            ],
 
             const SizedBox(height: 30),
 
-            // Logout button
-            adaptiveButton(
-              widget.translations['logout'] ?? 'Logout',
-              () async {
-                final prefs = await SharedPreferences.getInstance();
-                await prefs.remove('token');
-                Navigator.pushReplacementNamed(context, '/login');
-              },
-            ),
+            // Show different buttons based on login status
+            if (_isLoggedIn) ...[
+              // Logout button for logged in users
+              adaptiveButton(
+                widget.translations['logout'] ?? 'Logout',
+                () async {
+                  await AuthUtils.clearAuthData();
+                  // Navigate to login page and clear navigation stack
+                  Navigator.of(context, rootNavigator: true).pushNamedAndRemoveUntil('/login', (route) => false);
+                },
+              ),
+            ] else ...[
+              // Login button for not logged in users
+              adaptiveButton(
+                widget.translations['login'] ?? 'Login',
+                () {
+                  // Since we're in a CupertinoTabView, we need to use a different navigation approach
+                  Navigator.of(context, rootNavigator: true).pushNamed('/login');
+                },
+              ),
+            ],
           ],
         ),
       ),

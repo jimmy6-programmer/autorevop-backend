@@ -1,4 +1,4 @@
-package com.example.auto_solutions
+package com.example.auto_revop
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -1,5 +1,6 @@
-import 'package:auto_solutions/pages/login_page.dart';
-import 'package:auto_solutions/widgets/adaptive_button.dart';
+
+import 'package:auto_revop/pages/login_page.dart';
+import 'package:auto_revop/widgets/adaptive_button.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';

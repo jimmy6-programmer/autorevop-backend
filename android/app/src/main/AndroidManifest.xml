@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="auto_solutions"
+        android:label="auto_revop"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

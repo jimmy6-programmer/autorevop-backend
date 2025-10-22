@@ -1,20 +1,20 @@
 import 'dart:io' show Platform;
-import 'package:auto_solutions/loading/loading_page.dart';
+import 'loading/loading_page.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:auto_solutions/pages/translations.dart';
-import 'package:auto_solutions/pages/starting_page.dart';
-import 'package:auto_solutions/pages/login_page.dart';
-import 'package:auto_solutions/pages/signup_page.dart';
-import 'package:auto_solutions/pages/home_page.dart';
-import 'package:auto_solutions/pages/profile_page.dart';
-import 'package:auto_solutions/pages/first_onboarding_page.dart';
-import 'package:auto_solutions/pages/second_onboarding_page.dart';
-import 'package:auto_solutions/pages/mechanics_page.dart';
-import 'package:auto_solutions/pages/spare_parts_page.dart';
-import 'package:auto_solutions/pages/bookings_page.dart';
+import 'pages/translations.dart';
+import 'pages/starting_page.dart';
+import 'pages/login_page.dart';
+import 'pages/signup_page.dart';
+import 'pages/home_page.dart';
+import 'pages/profile_page.dart';
+import 'pages/first_onboarding_page.dart';
+import 'pages/second_onboarding_page.dart';
+import 'pages/mechanics_page.dart';
+import 'pages/spare_parts_page.dart';
+import 'pages/bookings_page.dart';
 
 // API Base URL configuration
 String getApiBaseUrl() {
@@ -28,6 +28,10 @@ void main() async {
 
   // Preload Lottie animation
   await precacheLottie();
+
+  // For fresh testing, always start from beginning
+  // Comment out the line below to test normal flow
+  // await prefs.clear(); // Uncomment to clear all data for fresh testing
 
   runApp(MyApp(initialRoute: hasSeenOnboarding ? '/login' : '/'));
 }
@@ -96,7 +100,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return Platform.isIOS
         ? CupertinoApp(
-            title: 'Mechanic Service App',
+            title: 'Auto RevOp',
             debugShowCheckedModeBanner: false,
             theme: const CupertinoThemeData(
               primaryColor: CupertinoColors.activeBlue,
@@ -105,7 +109,7 @@ class MyApp extends StatelessWidget {
             onGenerateRoute: _generateRoute,
           )
         : MaterialApp(
-            title: 'Mechanic Service App',
+            title: 'Auto RevOp',
             debugShowCheckedModeBanner: false,
             theme: ThemeData(
               primarySwatch: Colors.blue,

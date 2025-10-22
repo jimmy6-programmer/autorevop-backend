@@ -1,6 +1,7 @@
 import 'dart:convert';
+import 'package:auto_revop/models/spare_part_model.dart';
 import 'package:http/http.dart' as http;
-import 'package:auto_solutions/models/spare_part_model.dart';
+
 import '../utils/api_utils.dart'; // For getApiBaseUrl
 
 class InventoryService {

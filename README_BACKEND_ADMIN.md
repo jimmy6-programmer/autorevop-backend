@@ -5,7 +5,7 @@ This project provides a complete backend system for the Auto Solutions Flutter m
 ## Project Structure
 
 ```
-auto_solutions-main/
+auto_revop-main/
 ├── backend/                    # Mobile app backend (Node.js + Express + MongoDB)
 │   ├── controllers/            # Business logic controllers
 │   ├── models/                 # Mongoose models
@@ -153,7 +153,7 @@ npm install
 
 #### Mobile Backend (.env)
 ```
-MONGO_URI=mongodb://localhost:27017/auto_solutions
+MONGO_URI=mongodb://localhost:27017/auto_revop
 JWT_SECRET=your_jwt_secret_here
 EMAIL_USER=your_email@gmail.com
 EMAIL_PASS=your_email_password
@@ -162,7 +162,7 @@ PORT=5000
 
 #### Admin Backend (.env)
 ```
-MONGO_URI=mongodb://localhost:27017/auto_solutions
+MONGO_URI=mongodb://localhost:27017/auto_revop
 JWT_SECRET=your_admin_jwt_secret_here
 PORT=5001
 ```

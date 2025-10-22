@@ -1,6 +1,6 @@
 {
-    "name": "auto_solutions",
-    "short_name": "auto_solutions",
+    "name": "auto_revop",
+    "short_name": "auto_revop",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

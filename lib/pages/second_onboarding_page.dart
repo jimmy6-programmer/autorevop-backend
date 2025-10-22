@@ -46,7 +46,7 @@ class SecondOnboardingPage extends StatelessWidget {
               await _markOnboardingComplete();
               Navigator.pushNamedAndRemoveUntil(
                 context,
-                '/login',
+                '/home',
                 (route) => false,
               );
             }),
