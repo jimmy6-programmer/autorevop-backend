@@ -73,44 +73,13 @@ router.post('/forgot-password', async (req, res) => {
     user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
     await user.save();
 
-    // Set SendGrid API key
-    sgMail.setApiKey(process.env.EMAIL_PASS);
-
-    // Email options
-    const msg = {
-      to: email,
-      from: {
-        email: 'autorevop@gmail.com',
-        name: 'Auto RevOp'
-      },
-      subject: 'Password Reset Code - Auto RevOp',
-      text: `You requested a password reset for your Auto RevOp account.\n\nUse this 6-digit code to reset your password: ${resetToken}\n\nThis code expires in 1 hour.\n\nIf you didn't request this reset, please ignore this email.`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #333;">Password Reset - Auto RevOp</h2>
-          <p>You requested a password reset for your Auto RevOp account.</p>
-          <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0;">
-            <h3 style="color: #007bff; margin: 0; font-size: 24px;">${resetToken}</h3>
-            <p style="margin: 10px 0 0 0; color: #666;">Your 6-digit reset code</p>
-          </div>
-          <p><strong>This code expires in 1 hour.</strong></p>
-          <p>If you didn't request this reset, please ignore this email.</p>
-          <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
-          <p style="color: #666; font-size: 12px;">Auto RevOp - Your trusted automotive marketplace</p>
-        </div>
-      `,
-    };
-
-    // Send email
-    try {
-      await sgMail.send(msg);
-      console.log(`Password reset email sent successfully to: ${email}`);
-      res.json({ message: 'Password reset email sent successfully' });
-    } catch (emailError) {
-      console.error('SendGrid email sending failed:', emailError.message);
-      // For testing, return the token if email fails
-      res.json({ message: 'Password reset token generated (email failed)', token: resetToken });
-    }
+    // For now, skip email sending and just return the token for testing
+    console.log(`Password reset token generated for ${email}: ${resetToken}`);
+    res.json({
+      message: 'Password reset token generated successfully',
+      token: resetToken,
+      note: 'Email sending temporarily disabled for testing'
+    });
   } catch (err) {
     console.error('Error in forgot-password:', err);
     res.status(500).json({ message: 'Server error' });
