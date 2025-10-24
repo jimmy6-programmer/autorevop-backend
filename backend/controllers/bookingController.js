@@ -46,6 +46,12 @@ exports.createBooking = async (req, res) => {
       }
     }
 
+    // Handle custom issue for "Other" option
+    if (bookingData.customIssue && bookingData.type === 'mechanic') {
+      bookingData.issue = bookingData.customIssue;
+      console.log('📝 Using custom issue:', bookingData.issue);
+    }
+
     const booking = new Booking(bookingData);
     console.log('💾 Saving booking to database...');
 

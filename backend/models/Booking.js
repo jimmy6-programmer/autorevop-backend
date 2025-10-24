@@ -38,6 +38,10 @@ const bookingSchema = new mongoose.Schema({
     type: String,
     required: false, // Not required since we now use serviceId
   },
+  customIssue: {
+    type: String,
+    required: false, // For custom issues when "Other" is selected
+  },
   location: {
     type: String,
     required: true,
