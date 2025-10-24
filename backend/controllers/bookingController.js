@@ -33,7 +33,12 @@ exports.createBooking = async (req, res) => {
     // Populate issue/serviceType from service if serviceId is provided
     let bookingData = { ...req.body };
 
-    if (bookingData.serviceId && !bookingData.issue && !bookingData.serviceType) {
+    // Handle custom issue for "Other" option first
+    if (bookingData.customIssue && bookingData.type === 'mechanic') {
+      bookingData.issue = bookingData.customIssue;
+      bookingData.serviceId = null; // Remove serviceId for custom issues
+      console.log('📝 Using custom issue:', bookingData.issue);
+    } else if (bookingData.serviceId && bookingData.serviceId !== 'other' && !bookingData.issue && !bookingData.serviceType) {
       const Service = require('../models/Service');
       const service = await Service.findById(bookingData.serviceId);
       if (service) {
@@ -44,12 +49,6 @@ exports.createBooking = async (req, res) => {
         }
         console.log('📝 Populated service info:', bookingData.type === 'mechanic' ? bookingData.issue : bookingData.serviceType);
       }
-    }
-
-    // Handle custom issue for "Other" option
-    if (bookingData.customIssue && bookingData.type === 'mechanic') {
-      bookingData.issue = bookingData.customIssue;
-      console.log('📝 Using custom issue:', bookingData.issue);
     }
 
     const booking = new Booking(bookingData);

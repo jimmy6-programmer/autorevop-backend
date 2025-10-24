@@ -28,7 +28,7 @@ const bookingSchema = new mongoose.Schema({
   serviceId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Service',
-    required: true,
+    required: function() { return !this.customIssue; }, // Not required if customIssue is provided
   },
   issue: {
     type: String,
