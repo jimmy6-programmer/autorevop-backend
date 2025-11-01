@@ -6,15 +6,15 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
+import 'package:provider/provider.dart';
 import '../utils/api_utils.dart'; // For getApiBaseUrl
 import '../utils/auth_utils.dart'; // For authentication
 import '../models/service_model.dart';
+import '../providers/translation_provider.dart';
 import 'success_page.dart';
 
 class BookingsPage extends StatefulWidget {
-  final Map<String, String> translations;
-
-  const BookingsPage({required this.translations, super.key});
+  const BookingsPage({super.key});
 
   @override
   _BookingsPageState createState() => _BookingsPageState();
@@ -370,7 +370,8 @@ class _BookingsPageState extends State<BookingsPage> {
         final symbol = _currencies[_selectedCurrency]!['symbol'] as String;
         _totalPrice = '$symbol${convertedPrice.toStringAsFixed(2)}';
       } else {
-        _totalPrice = widget.translations['toBeDiscussed'] ?? 'To be discussed';
+        final localeProvider = Provider.of<LocaleProvider>(context);
+        _totalPrice = localeProvider.translate('toBeDiscussed');
       }
     });
   }
@@ -534,7 +535,14 @@ class _BookingsPageState extends State<BookingsPage> {
                     selectedIndex = index;
                   },
                   children: options
-                      .map((option) => Center(child: Text(option)))
+                      .map(
+                        (option) => Center(
+                          child: Text(
+                            option,
+                            style: TextStyle(color: Colors.black),
+                          ),
+                        ),
+                      )
                       .toList(),
                 ),
               ),
@@ -547,7 +555,10 @@ class _BookingsPageState extends State<BookingsPage> {
 
   Future<void> _submitBooking() async {
     // Check authentication before proceeding
-    final isAuthenticated = await AuthUtils.checkAuthAndRedirect(context, widget.translations);
+    final isAuthenticated = await AuthUtils.checkAuthAndRedirect(
+      context,
+      {}, // Empty map since we're using easy_localization now
+    );
     if (!isAuthenticated) return;
 
     print('🔄 Starting towing booking submission...');
@@ -674,17 +685,20 @@ class _BookingsPageState extends State<BookingsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final localeProvider = Provider.of<LocaleProvider>(context);
+
     return Platform.isIOS
         ? CupertinoPageScaffold(
+            backgroundColor: Colors.white,
             navigationBar: CupertinoNavigationBar(
+              backgroundColor: Colors.white,
               transitionBetweenRoutes: false,
               middle: Text(
-                widget.translations['towingServiceBooking'] ??
-                    'Book Towing Service',
+                localeProvider.translate('towingServiceBooking'),
                 style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: CupertinoColors.label,
+                  color: Colors.black,
                 ),
               ),
             ),
@@ -696,7 +710,7 @@ class _BookingsPageState extends State<BookingsPage> {
                   children: [
                     const SizedBox(height: 24),
                     Text(
-                      widget.translations['fullName'] ?? 'Full Name',
+                      localeProvider.translate('fullName'),
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -706,373 +720,334 @@ class _BookingsPageState extends State<BookingsPage> {
                     const SizedBox(height: 8),
                     CupertinoTextField(
                       controller: _fullNameController,
-                      placeholder:
-                          widget.translations['namePlaceholder'] ??
-                          'Enter your full name',
+                      placeholder: localeProvider.translate('namePlaceholder'),
+                      placeholderStyle: TextStyle(color: Colors.grey),
+                      style: TextStyle(color: Colors.black),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        border: Border(
+                          bottom: BorderSide(color: Colors.black, width: 1.0),
+                        ),
+                      ),
                       padding: EdgeInsets.all(16.0),
                       onChanged: (value) => _updateForm(),
                     ),
-                const SizedBox(height: 24),
-                Text(
-                  widget.translations['phoneNumber'] ?? 'Phone Number',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: CupertinoColors.label,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                CupertinoTextField(
-                  controller: _phoneNumberController,
-                  placeholder:
-                      widget.translations['phonePlaceholder'] ??
-                      'Enter phone number with country code (e.g., +250)',
-                  padding: EdgeInsets.all(16.0),
-                  keyboardType: TextInputType.phone,
-                  onChanged: (value) => _updateForm(),
-                ),
-                const SizedBox(height: 24),
-                Text(
-                  widget.translations['pickupLocation'] ?? 'Pickup Location',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: CupertinoColors.label,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                CupertinoTextField(
-                  controller: _pickupLocationController,
-                  placeholder:
-                      widget.translations['pickupLocationPlaceholder'] ??
-                      'Enter pickup location',
-                  padding: EdgeInsets.all(16.0),
-                  onChanged: (value) => _updateForm(),
-                ),
-                const SizedBox(height: 24),
-                Text(
-                  widget.translations['vehicleBrandModel'] ??
-                      'Vehicle Brand & Model',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: CupertinoColors.label,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () => _showCupertinoPicker(
-                          context,
-                          _vehicleBrands,
-                          _selectedVehicleMake,
-                          (value) {
-                            setState(() {
-                              _selectedVehicleMake = value;
-                              _selectedVehicleModel =
-                                  null; // Reset model when make changes
-                              _updateForm();
-                            });
-                          },
-                        ),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 16,
-                          ),
-                          decoration: BoxDecoration(
-                            border: Border(
-                              bottom: BorderSide(
-                                color: _selectedVehicleMake != null
-                                    ? CupertinoColors.activeBlue
-                                    : CupertinoColors.inactiveGray,
-                                width: _selectedVehicleMake != null ? 2 : 1,
-                              ),
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                _selectedVehicleMake ??
-                                    (widget.translations['vehicleMake'] ??
-                                        'Select Make'),
-                                style: TextStyle(
-                                  color: _selectedVehicleMake != null
-                                      ? CupertinoColors.label
-                                      : CupertinoColors.secondaryLabel,
-                                  fontSize: 16,
-                                ),
-                              ),
-                              Icon(
-                                CupertinoIcons.chevron_down,
-                                color: CupertinoColors.inactiveGray,
-                                size: 20,
-                              ),
-                            ],
-                          ),
-                        ),
+                    const SizedBox(height: 24),
+                    Text(
+                      localeProvider.translate('phoneNumber'),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: CupertinoColors.label,
                       ),
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: _selectedVehicleMake != null
-                            ? () => _showCupertinoPicker(
-                                context,
-                                _vehicleModels[_selectedVehicleMake] ?? [],
-                                _selectedVehicleModel,
-                                (value) {
-                                  setState(() {
-                                    _selectedVehicleModel = value;
-                                    _updateForm();
-                                  });
-                                },
-                              )
-                            : null,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 16,
-                          ),
-                          decoration: BoxDecoration(
-                            border: Border(
-                              bottom: BorderSide(
-                                color: _selectedVehicleModel != null
-                                    ? CupertinoColors.activeBlue
-                                    : CupertinoColors.inactiveGray,
-                                width: _selectedVehicleModel != null ? 2 : 1,
-                              ),
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                _selectedVehicleModel ??
-                                    (widget.translations['vehicleModel'] ??
-                                        'Select Model'),
-                                style: TextStyle(
-                                  color: _selectedVehicleModel != null
-                                      ? CupertinoColors.label
-                                      : CupertinoColors.secondaryLabel,
-                                  fontSize: 16,
-                                ),
-                              ),
-                              Icon(
-                                CupertinoIcons.chevron_down,
-                                color: _selectedVehicleMake != null
-                                    ? CupertinoColors.inactiveGray
-                                    : CupertinoColors.systemGrey,
-                                size: 20,
-                              ),
-                            ],
-                          ),
+                    const SizedBox(height: 8),
+                    CupertinoTextField(
+                      controller: _phoneNumberController,
+                      placeholder: localeProvider.translate('phonePlaceholder'),
+                      placeholderStyle: TextStyle(color: Colors.grey),
+                      style: TextStyle(color: Colors.black),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        border: Border(
+                          bottom: BorderSide(color: Colors.black, width: 1.0),
                         ),
+                      ),
+                      padding: EdgeInsets.all(16.0),
+                      keyboardType: TextInputType.phone,
+                      onChanged: (value) => _updateForm(),
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      localeProvider.translate('pickupLocation'),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: CupertinoColors.label,
                       ),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                Text(
-                  widget.translations['carPlateNumber'] ?? 'Car Plate Number',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: CupertinoColors.label,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                CupertinoTextField(
-                  controller: _carPlateNumberController,
-                  placeholder:
-                      widget.translations['carPlatePlaceholder'] ??
-                      'Enter car plate number',
-                  padding: EdgeInsets.all(16.0),
-                  onChanged: (value) => _updateForm(),
-                ),
-                const SizedBox(height: 24),
-                Text(
-                  widget.translations['serviceType'] ?? 'Service Type',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: CupertinoColors.label,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                _isLoadingServices
-                    ? const Center(child: CupertinoActivityIndicator())
-                    : GestureDetector(
-                        onTap: () => _showCupertinoPicker(
-                          context,
-                          _towingServices
-                              .map((service) => service.name)
-                              .toList(),
-                          _selectedService?.name,
-                          (value) {
-                            if (value != null) {
-                              final service = _towingServices.firstWhere(
-                                (s) => s.name == value,
-                              );
-                              setState(() {
-                                _selectedService = service;
-                                _updateTotalPrice();
-                              });
-                            }
-                          },
-                        ),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 16,
-                          ),
-                          decoration: BoxDecoration(
-                            border: Border(
-                              bottom: BorderSide(
-                                color: _selectedService != null
-                                    ? CupertinoColors.activeBlue
-                                    : CupertinoColors.inactiveGray,
-                                width: _selectedService != null ? 2 : 1,
-                              ),
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                _selectedService?.name ??
-                                    (widget.translations['selectServiceType'] ??
-                                        'Select Service Type'),
-                                style: TextStyle(
-                                  color: _selectedService != null
-                                      ? CupertinoColors.label
-                                      : CupertinoColors.secondaryLabel,
-                                  fontSize: 16,
-                                ),
-                              ),
-                              Icon(
-                                CupertinoIcons.chevron_down,
-                                color: CupertinoColors.inactiveGray,
-                                size: 20,
-                              ),
-                            ],
-                          ),
+                    const SizedBox(height: 8),
+                    CupertinoTextField(
+                      controller: _pickupLocationController,
+                      placeholder: localeProvider.translate('pickupLocationPlaceholder'),
+                      placeholderStyle: TextStyle(color: Colors.grey),
+                      style: TextStyle(color: Colors.black),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        border: Border(
+                          bottom: BorderSide(color: Colors.black, width: 1.0),
                         ),
                       ),
-                      const SizedBox(height: 24),
-                      Text(
-                        widget.translations['selectCurrency'] ?? 'Select Currency',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: CupertinoColors.label,
-                        ),
-                      ),
-                const SizedBox(height: 8),
-                GestureDetector(
-                  onTap: () => _showCupertinoPicker(
-                    context,
-                    _currencies.keys.toList(),
-                    _selectedCurrency,
-                    (value) {
-                      setState(() {
-                        _selectedCurrency = value!;
-                        _updateTotalPrice();
-                      });
-                    },
-                  ),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 16,
+                      padding: EdgeInsets.all(16.0),
+                      onChanged: (value) => _updateForm(),
                     ),
-                    decoration: BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(
-                          color: CupertinoColors.activeBlue,
-                          width: 2,
-                        ),
+                    const SizedBox(height: 24),
+                    Text(
+                      localeProvider.translate('vehicleBrandModel'),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: CupertinoColors.label,
                       ),
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    const SizedBox(height: 8),
+                    Row(
                       children: [
-                        Text(
-                          _selectedCurrency,
-                          style: const TextStyle(
-                            color: CupertinoColors.label,
-                            fontSize: 16,
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => _showCupertinoPicker(
+                              context,
+                              _vehicleBrands,
+                              _selectedVehicleMake,
+                              (value) {
+                                setState(() {
+                                  _selectedVehicleMake = value;
+                                  _selectedVehicleModel =
+                                      null; // Reset model when make changes
+                                  _updateForm();
+                                });
+                              },
+                            ),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 16,
+                              ),
+                              decoration: BoxDecoration(
+                                border: Border(
+                                  bottom: BorderSide(
+                                    color: _selectedVehicleMake != null
+                                        ? CupertinoColors.activeBlue
+                                        : CupertinoColors.inactiveGray,
+                                    width: _selectedVehicleMake != null ? 2 : 1,
+                                  ),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    _selectedVehicleMake ??
+                                        localeProvider.translate('vehicleMake'),
+                                    style: TextStyle(
+                                      color: _selectedVehicleMake != null
+                                          ? Colors.black
+                                          : Colors.grey,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                  Icon(
+                                    CupertinoIcons.chevron_down,
+                                    color: CupertinoColors.inactiveGray,
+                                    size: 20,
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
                         ),
-                        Icon(
-                          CupertinoIcons.chevron_down,
-                          color: CupertinoColors.inactiveGray,
-                          size: 20,
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: _selectedVehicleMake != null
+                                ? () => _showCupertinoPicker(
+                                    context,
+                                    _vehicleModels[_selectedVehicleMake] ?? [],
+                                    _selectedVehicleModel,
+                                    (value) {
+                                      setState(() {
+                                        _selectedVehicleModel = value;
+                                        _updateForm();
+                                      });
+                                    },
+                                  )
+                                : null,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 16,
+                              ),
+                              decoration: BoxDecoration(
+                                border: Border(
+                                  bottom: BorderSide(
+                                    color: _selectedVehicleModel != null
+                                        ? CupertinoColors.activeBlue
+                                        : CupertinoColors.inactiveGray,
+                                    width: _selectedVehicleModel != null
+                                        ? 2
+                                        : 1,
+                                  ),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    _selectedVehicleModel ??
+                                        localeProvider.translate('vehicleModel'),
+                                    style: TextStyle(
+                                      color: _selectedVehicleModel != null
+                                          ? Colors.black
+                                          : Colors.grey,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                  Icon(
+                                    CupertinoIcons.chevron_down,
+                                    color: _selectedVehicleMake != null
+                                        ? CupertinoColors.inactiveGray
+                                        : CupertinoColors.systemGrey,
+                                    size: 20,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                         ),
                       ],
                     ),
-                  ),
+                    const SizedBox(height: 24),
+                    Text(
+                      localeProvider.translate('carPlateNumber'),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: CupertinoColors.label,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    CupertinoTextField(
+                      controller: _carPlateNumberController,
+                      placeholder: localeProvider.translate('carPlatePlaceholder'),
+                      placeholderStyle: TextStyle(color: Colors.grey),
+                      style: TextStyle(color: Colors.black),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        border: Border(
+                          bottom: BorderSide(color: Colors.black, width: 1.0),
+                        ),
+                      ),
+                      padding: EdgeInsets.all(16.0),
+                      onChanged: (value) => _updateForm(),
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      localeProvider.translate('serviceType'),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: CupertinoColors.label,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    _isLoadingServices
+                        ? const Center(child: CupertinoActivityIndicator())
+                        : GestureDetector(
+                            onTap: () => _showCupertinoPicker(
+                              context,
+                              _towingServices
+                                  .map((service) => service.name)
+                                  .toList(),
+                              _selectedService?.name,
+                              (value) {
+                                if (value != null) {
+                                  final service = _towingServices.firstWhere(
+                                    (s) => s.name == value,
+                                  );
+                                  setState(() {
+                                    _selectedService = service;
+                                    _updateTotalPrice();
+                                  });
+                                }
+                              },
+                            ),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 16,
+                              ),
+                              decoration: BoxDecoration(
+                                border: Border(
+                                  bottom: BorderSide(
+                                    color: _selectedService != null
+                                        ? CupertinoColors.activeBlue
+                                        : CupertinoColors.inactiveGray,
+                                    width: _selectedService != null ? 2 : 1,
+                                  ),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    _selectedService?.name ??
+                                        localeProvider.translate('selectServiceType'),
+                                    style: TextStyle(
+                                      color: _selectedService != null
+                                          ? Colors.black
+                                          : Colors.grey,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                  Icon(
+                                    CupertinoIcons.chevron_down,
+                                    color: CupertinoColors.inactiveGray,
+                                    size: 20,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                    const SizedBox(height: 24),
+                    const SizedBox(height: 24),
+                    Center(
+                      child: adaptiveButton(
+                        localeProvider.translate('submitBooking'),
+                        _isFormValid ? _submitBooking : null,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
                 ),
-                const SizedBox(height: 24),
-                Text(
-                  '${widget.translations['totalPrice'] ?? 'Total Price'}: $_totalPrice',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: CupertinoColors.label,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Center(
-                  child: adaptiveButton(
-                    widget.translations['submitBooking'] ?? 'Submit Booking',
-                    _isFormValid ? _submitBooking : null,
-                  ),
-                ),
-                const SizedBox(height: 16),
-              ],
-            ),
-          ),
-        )
-      ) : Scaffold(
-          appBar: AppBar(
-            title: Text(
-              widget.translations['towingServiceBooking'] ??
-                  'Book Towing Service',
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
               ),
             ),
-            backgroundColor: Colors.white,
-            elevation: 0,
-            iconTheme: const IconThemeData(color: Colors.black87),
-          ),
-          body: SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 24),
-                Text(
-                  widget.translations['fullName'] ?? 'Full Name',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
+          )
+        : Scaffold(
+            appBar: AppBar(
+              title: Text(
+                localeProvider.translate('towingServiceBooking'),
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
                 ),
+              ),
+              backgroundColor: Colors.white,
+              elevation: 0,
+              iconTheme: const IconThemeData(color: Colors.black87),
+            ),
+            body: SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 24),
+                  Text(
+                    localeProvider.translate('fullName'),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
                   const SizedBox(height: 8),
                   TextField(
                     controller: _fullNameController,
                     decoration: InputDecoration(
-                      hintText:
-                          widget.translations['namePlaceholder'] ??
-                          'Enter your full name',
+                      hintText: localeProvider.translate('namePlaceholder'),
                       border: const UnderlineInputBorder(),
                       enabledBorder: const UnderlineInputBorder(
                         borderSide: BorderSide(
@@ -1092,7 +1067,7 @@ class _BookingsPageState extends State<BookingsPage> {
                   ),
                   const SizedBox(height: 24),
                   Text(
-                    widget.translations['phoneNumber'] ?? 'Phone Number',
+                    localeProvider.translate('phoneNumber'),
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -1103,9 +1078,7 @@ class _BookingsPageState extends State<BookingsPage> {
                   TextField(
                     controller: _phoneNumberController,
                     decoration: InputDecoration(
-                      hintText:
-                          widget.translations['phonePlaceholder'] ??
-                          'Enter phone number with country code (e.g., +250)',
+                      hintText: localeProvider.translate('phonePlaceholder'),
                       border: const UnderlineInputBorder(),
                       enabledBorder: const UnderlineInputBorder(
                         borderSide: BorderSide(
@@ -1126,7 +1099,7 @@ class _BookingsPageState extends State<BookingsPage> {
                   ),
                   const SizedBox(height: 24),
                   Text(
-                    widget.translations['pickupLocation'] ?? 'Pickup Location',
+                    localeProvider.translate('pickupLocation'),
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -1137,9 +1110,7 @@ class _BookingsPageState extends State<BookingsPage> {
                   TextField(
                     controller: _pickupLocationController,
                     decoration: InputDecoration(
-                      hintText:
-                          widget.translations['pickupLocationPlaceholder'] ??
-                          'Enter pickup location',
+                      hintText: localeProvider.translate('pickupLocationPlaceholder'),
                       border: const UnderlineInputBorder(),
                       enabledBorder: const UnderlineInputBorder(
                         borderSide: BorderSide(
@@ -1159,8 +1130,7 @@ class _BookingsPageState extends State<BookingsPage> {
                   ),
                   const SizedBox(height: 24),
                   Text(
-                    widget.translations['vehicleBrandModel'] ??
-                        'Vehicle Brand & Model',
+                    localeProvider.translate('vehicleBrandModel'),
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -1205,8 +1175,7 @@ class _BookingsPageState extends State<BookingsPage> {
                               children: [
                                 Text(
                                   _selectedVehicleMake ??
-                                      (widget.translations['vehicleMake'] ??
-                                          'Select Make'),
+                                      localeProvider.translate('vehicleMake'),
                                   style: TextStyle(
                                     color: _selectedVehicleMake != null
                                         ? Colors.black87
@@ -1260,8 +1229,7 @@ class _BookingsPageState extends State<BookingsPage> {
                               children: [
                                 Text(
                                   _selectedVehicleModel ??
-                                      (widget.translations['vehicleModel'] ??
-                                          'Select Model'),
+                                      localeProvider.translate('vehicleModel'),
                                   style: TextStyle(
                                     color: _selectedVehicleModel != null
                                         ? Colors.black87
@@ -1285,7 +1253,7 @@ class _BookingsPageState extends State<BookingsPage> {
                   ),
                   const SizedBox(height: 24),
                   Text(
-                    widget.translations['carPlateNumber'] ?? 'Car Plate Number',
+                    localeProvider.translate('carPlateNumber'),
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -1296,9 +1264,7 @@ class _BookingsPageState extends State<BookingsPage> {
                   TextField(
                     controller: _carPlateNumberController,
                     decoration: InputDecoration(
-                      hintText:
-                          widget.translations['carPlatePlaceholder'] ??
-                          'Enter car plate number',
+                      hintText: localeProvider.translate('carPlatePlaceholder'),
                       border: const UnderlineInputBorder(),
                       enabledBorder: const UnderlineInputBorder(
                         borderSide: BorderSide(
@@ -1318,7 +1284,7 @@ class _BookingsPageState extends State<BookingsPage> {
                   ),
                   const SizedBox(height: 24),
                   Text(
-                    widget.translations['serviceType'] ?? 'Service Type',
+                    localeProvider.translate('serviceType'),
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -1367,8 +1333,7 @@ class _BookingsPageState extends State<BookingsPage> {
                               children: [
                                 Text(
                                   _selectedService?.name ??
-                                      (widget.translations['selectServiceType'] ??
-                                          'Select Service Type'),
+                                      localeProvider.translate('selectServiceType'),
                                   style: TextStyle(
                                     color: _selectedService != null
                                         ? Colors.black87
@@ -1386,72 +1351,10 @@ class _BookingsPageState extends State<BookingsPage> {
                           ),
                         ),
                   const SizedBox(height: 24),
-                  Text(
-                    widget.translations['selectCurrency'] ?? 'Select Currency',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  GestureDetector(
-                    onTap: () => _showCupertinoPicker(
-                      context,
-                      _currencies.keys.toList(),
-                      _selectedCurrency,
-                      (value) {
-                        setState(() {
-                          _selectedCurrency = value!;
-                          _updateTotalPrice();
-                        });
-                      },
-                    ),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 16,
-                      ),
-                      decoration: BoxDecoration(
-                        border: Border(
-                          bottom: BorderSide(
-                            color: CupertinoColors.activeBlue,
-                            width: 2,
-                          ),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            _selectedCurrency,
-                            style: const TextStyle(
-                              color: Colors.black87,
-                              fontSize: 16,
-                            ),
-                          ),
-                          Icon(
-                            CupertinoIcons.chevron_down,
-                            color: CupertinoColors.inactiveGray,
-                            size: 20,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  Text(
-                    '${widget.translations['totalPrice'] ?? 'Total Price'}: $_totalPrice',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
                   const SizedBox(height: 24),
                   Center(
                     child: adaptiveButton(
-                      widget.translations['submitBooking'] ?? 'Submit Booking',
+                      localeProvider.translate('submitBooking'),
                       _isFormValid ? _submitBooking : null,
                     ),
                   ),
@@ -1460,5 +1363,5 @@ class _BookingsPageState extends State<BookingsPage> {
               ),
             ),
           );
- }
+  }
 }

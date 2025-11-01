@@ -1,9 +1,7 @@
-
 import 'package:auto_revop/pages/login_page.dart';
 import 'package:auto_revop/widgets/adaptive_button.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../utils/api_utils.dart'; // For getApiBaseUrl
@@ -18,101 +16,129 @@ class ResetPasswordPage extends StatefulWidget {
 class _ResetPasswordPageState extends State<ResetPasswordPage> {
   final TextEditingController tokenController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController = TextEditingController();
+  final TextEditingController confirmPasswordController =
+      TextEditingController();
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
 
   Future<void> _resetPassword() async {
     if (passwordController.text != confirmPasswordController.text) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Passwords do not match')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Passwords do not match')));
       return;
     }
 
     final response = await http.post(
-      Uri.parse('${getApiBaseUrl()}/api/auth/reset-password/${tokenController.text}'),
+      Uri.parse(
+        '${getApiBaseUrl()}/api/auth/reset-password/${tokenController.text}',
+      ),
       headers: {'Content-Type': 'application/json'},
-      body: json.encode({
-        'password': passwordController.text,
-      }),
+      body: json.encode({'password': passwordController.text}),
     );
 
     if (response.statusCode == 200) {
       try {
         final data = json.decode(response.body);
-        final snackBar = SnackBar(
-          elevation: 0,
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: Colors.transparent,
-          content: AwesomeSnackbarContent(
-            title: 'Success!',
-            message: 'Password reset successfully.',
-            contentType: ContentType.success,
-          ),
+
+        // Show success dialog for iOS
+        showCupertinoDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return CupertinoAlertDialog(
+              title: Text('Success!'),
+              content: Text('Password reset successfully.'),
+              actions: [
+                CupertinoDialogAction(
+                  child: Text('OK'),
+                  onPressed: () {
+                    Navigator.of(context).pop(); // Close dialog
+                    Navigator.push(
+                      context,
+                      CupertinoPageRoute(
+                        builder: (context) => const LoginPage(),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            );
+          },
         );
-
-        ScaffoldMessenger.of(context).showSnackBar(snackBar);
-
-        Future.delayed(const Duration(seconds: 2), () {
-          Navigator.push(context, MaterialPageRoute(builder: (context) => const LoginPage()));
-        });
       } catch (e) {
-        final snackBar = SnackBar(
-          elevation: 0,
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: Colors.transparent,
-          content: AwesomeSnackbarContent(
-            title: 'Error!',
-            message: 'Unexpected response from server.',
-            contentType: ContentType.failure,
-          ),
+        showCupertinoDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return CupertinoAlertDialog(
+              title: Text('Error!'),
+              content: Text('Unexpected response from server.'),
+              actions: [
+                CupertinoDialogAction(
+                  child: Text('OK'),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+              ],
+            );
+          },
         );
-        ScaffoldMessenger.of(context).showSnackBar(snackBar);
       }
     } else {
       try {
         final data = json.decode(response.body);
-        final snackBar = SnackBar(
-          elevation: 0,
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: Colors.transparent,
-          content: AwesomeSnackbarContent(
-            title: 'Failed!',
-            message: data['message'] ?? 'Reset failed.',
-            contentType: ContentType.failure,
-          ),
+        showCupertinoDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return CupertinoAlertDialog(
+              title: Text('Failed!'),
+              content: Text(data['message'] ?? 'Reset failed.'),
+              actions: [
+                CupertinoDialogAction(
+                  child: Text('OK'),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+              ],
+            );
+          },
         );
-        ScaffoldMessenger.of(context).showSnackBar(snackBar);
       } catch (e) {
-        final snackBar = SnackBar(
-          elevation: 0,
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: Colors.transparent,
-          content: AwesomeSnackbarContent(
-            title: 'Error!',
-            message: 'Server error or invalid response. Status: ${response.statusCode}',
-            contentType: ContentType.failure,
-          ),
+        showCupertinoDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return CupertinoAlertDialog(
+              title: Text('Error!'),
+              content: Text(
+                'Server error or invalid response. Status: ${response.statusCode}',
+              ),
+              actions: [
+                CupertinoDialogAction(
+                  child: Text('OK'),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+              ],
+            );
+          },
         );
-        ScaffoldMessenger.of(context).showSnackBar(snackBar);
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return CupertinoPageScaffold(
       backgroundColor: Colors.white,
-      body: SafeArea(
+      child: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(20.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // 🔙 Back Button
-              IconButton(
-                icon: const Icon(CupertinoIcons.back, color: Colors.blue),
+              CupertinoButton(
+                padding: EdgeInsets.zero,
+                child: Icon(
+                  CupertinoIcons.back,
+                  color: CupertinoColors.activeBlue,
+                ),
                 onPressed: () => Navigator.pop(context),
               ),
               const SizedBox(height: 40),
@@ -121,17 +147,24 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
               Center(
                 child: Column(
                   children: const [
-                    Icon(Icons.verified_user, size: 80, color: Colors.blue),
+                    Icon(
+                      CupertinoIcons.checkmark_seal_fill,
+                      size: 80,
+                      color: CupertinoColors.activeBlue,
+                    ),
                     SizedBox(height: 20),
                     Text(
                       "Reset password",
-                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     SizedBox(height: 10),
                     Text(
                       "Enter the 6-digit code sent to your email",
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.black54),
+                      style: TextStyle(color: CupertinoColors.secondaryLabel),
                     ),
                   ],
                 ),
@@ -139,76 +172,96 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
               const SizedBox(height: 30),
 
               // 🔑 Code Field
-              TextField(
+              CupertinoTextField(
                 controller: tokenController,
-                decoration: InputDecoration(
-                  labelText: "Reset Code (6 digits)",
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                placeholder: "Reset Code (6 digits)",
+                placeholderStyle: TextStyle(color: Colors.black),
+                style: TextStyle(color: Colors.black),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border(
+                    bottom: BorderSide(color: Colors.black, width: 1.0),
                   ),
                 ),
+                padding: EdgeInsets.all(16.0),
                 keyboardType: TextInputType.number,
                 maxLength: 6,
               ),
               const SizedBox(height: 15),
 
               // 🔑 Password Field
-              TextField(
+              CupertinoTextField(
                 controller: passwordController,
                 obscureText: _obscurePassword,
-                decoration: InputDecoration(
-                  labelText: "New password",
-                  suffixIcon: IconButton(
-                    icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
-                    onPressed: () {
-                      setState(() {
-                        _obscurePassword = !_obscurePassword;
-                      });
-                    },
+                placeholder: "New password",
+                placeholderStyle: TextStyle(color: Colors.black),
+                style: TextStyle(color: Colors.black),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border(
+                    bottom: BorderSide(color: Colors.black, width: 1.0),
                   ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                ),
+                padding: EdgeInsets.all(16.0),
+                suffix: CupertinoButton(
+                  padding: EdgeInsets.zero,
+                  child: Icon(
+                    _obscurePassword
+                        ? CupertinoIcons.eye_slash
+                        : CupertinoIcons.eye,
                   ),
+                  onPressed: () {
+                    setState(() {
+                      _obscurePassword = !_obscurePassword;
+                    });
+                  },
                 ),
               ),
               const SizedBox(height: 15),
 
               // 🔑 Confirm Password Field
-              TextField(
+              CupertinoTextField(
                 controller: confirmPasswordController,
                 obscureText: _obscureConfirmPassword,
-                decoration: InputDecoration(
-                  labelText: "Confirm password",
-                  suffixIcon: IconButton(
-                    icon: Icon(_obscureConfirmPassword ? Icons.visibility_off : Icons.visibility),
-                    onPressed: () {
-                      setState(() {
-                        _obscureConfirmPassword = !_obscureConfirmPassword;
-                      });
-                    },
+                placeholder: "Confirm password",
+                placeholderStyle: TextStyle(color: Colors.black),
+                style: TextStyle(color: Colors.black),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border(
+                    bottom: BorderSide(color: Colors.black, width: 1.0),
                   ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                ),
+                padding: EdgeInsets.all(16.0),
+                suffix: CupertinoButton(
+                  padding: EdgeInsets.zero,
+                  child: Icon(
+                    _obscureConfirmPassword
+                        ? CupertinoIcons.eye_slash
+                        : CupertinoIcons.eye,
                   ),
+                  onPressed: () {
+                    setState(() {
+                      _obscureConfirmPassword = !_obscureConfirmPassword;
+                    });
+                  },
                 ),
               ),
               const SizedBox(height: 30),
 
               // 🔘 Centered Reset Button with modern Snackbar
-              Center(
-                child: adaptiveButton("Reset Password", _resetPassword),
-              ),
+              Center(child: adaptiveButton("Reset Password", _resetPassword)),
               const SizedBox(height: 15),
 
               // 🔗 Link to login
               Center(
-                child: TextButton(
+                child: CupertinoButton(
                   onPressed: () {
                     Navigator.pop(context);
                   },
                   child: const Text(
                     "Know your password? Log in",
-                    style: TextStyle(color: Colors.blue),
+                    style: TextStyle(color: CupertinoColors.activeBlue),
                   ),
                 ),
               ),

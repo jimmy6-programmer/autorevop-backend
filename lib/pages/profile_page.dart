@@ -4,15 +4,13 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
 import '../utils/api_utils.dart'; // For getApiBaseUrl
 import '../utils/auth_utils.dart'; // For authentication utilities
-import 'translations.dart';
+import '../providers/translation_provider.dart';
 
 class ProfilePage extends StatefulWidget {
-  final Map<String, String> translations;
-
-  const ProfilePage({super.key, required this.translations});
+  const ProfilePage({super.key});
 
   @override
   _ProfilePageState createState() => _ProfilePageState();
@@ -85,8 +83,8 @@ class _ProfilePageState extends State<ProfilePage> {
           _isLoggedIn = true;
           _fullName = userData?['name'] ?? "Unknown";
           _email = userData?['email'] ?? "Unknown";
-          _phone = "Not provided";
-          _country = "Not provided";
+          _phone = userData?['phone'] ?? "Not provided";
+          _country = userData?['country'] ?? "Not provided";
           _isLoading = false;
         });
       }
@@ -96,8 +94,8 @@ class _ProfilePageState extends State<ProfilePage> {
         _isLoggedIn = true;
         _fullName = userData?['name'] ?? "Unknown";
         _email = userData?['email'] ?? "Unknown";
-        _phone = "Not provided";
-        _country = "Not provided";
+        _phone = userData?['phone'] ?? "Not provided";
+        _country = userData?['country'] ?? "Not provided";
         _isLoading = false;
       });
     }
@@ -105,6 +103,8 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    final localeProvider = Provider.of<LocaleProvider>(context);
+
     return Scaffold(
       backgroundColor: Colors.grey[100],
       body: SingleChildScrollView(
@@ -155,13 +155,13 @@ class _ProfilePageState extends State<ProfilePage> {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 child: Column(
                   children: [
-                    _buildDetailRow(widget.translations['fullName'] ?? 'Name', _fullName),
+                    _buildDetailRow(localeProvider.translate('fullName'), _fullName),
                     const Divider(height: 0),
-                    _buildDetailRow(widget.translations['email'] ?? 'Email account', _email),
+                    _buildDetailRow(localeProvider.translate('email'), _email),
                     const Divider(height: 0),
-                    _buildDetailRow(widget.translations['phoneNumber'] ?? 'Mobile number', _phone.isEmpty ? "Add number" : _phone),
+                    _buildDetailRow(localeProvider.translate('phoneNumber'), _phone.isEmpty ? "Add number" : _phone),
                     const Divider(height: 0),
-                    _buildDetailRow(widget.translations['country'] ?? 'Country', _country),
+                    _buildDetailRow(localeProvider.translate('country'), _country),
                   ],
                 ),
               ),
@@ -182,7 +182,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        widget.translations['welcomeMessage'] ?? 'Welcome to Auto RevOp',
+                        localeProvider.translate('welcomeMessage'),
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -192,7 +192,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        widget.translations['loginPrompt'] ?? 'Please login to view your profile and manage your account.',
+                        localeProvider.translate('loginPrompt'),
                         style: const TextStyle(
                           fontSize: 14,
                           color: Colors.black54,
@@ -212,7 +212,7 @@ class _ProfilePageState extends State<ProfilePage> {
             if (_isLoggedIn) ...[
               // Logout button for logged in users
               adaptiveButton(
-                widget.translations['logout'] ?? 'Logout',
+                localeProvider.translate('logout'),
                 () async {
                   await AuthUtils.clearAuthData();
                   // Navigate to login page and clear navigation stack
@@ -222,7 +222,7 @@ class _ProfilePageState extends State<ProfilePage> {
             ] else ...[
               // Login button for not logged in users
               adaptiveButton(
-                widget.translations['login'] ?? 'Login',
+                localeProvider.translate('login'),
                 () {
                   // Since we're in a CupertinoTabView, we need to use a different navigation approach
                   Navigator.of(context, rootNavigator: true).pushNamed('/login');

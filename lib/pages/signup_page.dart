@@ -1,12 +1,13 @@
 import 'dart:io' show Platform;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 import '../widgets/adaptive_button.dart';
 import '../utils/api_utils.dart'; // For getApiBaseUrl
-import '../utils/auth_utils.dart'; // For authentication utilities
+// For authentication utilities
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -24,8 +25,182 @@ class _SignupPageState extends State<SignupPage> {
   String? selectedCountry = 'Rwanda';
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+  bool _acceptTerms = false; // Track Terms and Conditions acceptance
+
+  // Show Terms and Conditions dialog
+  void _showTermsAndConditions() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text(
+            'Terms and Conditions',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const [
+                Text(
+                  'Welcome to Auto RevOp',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'By using our automotive marketplace application, you agree to the following terms and conditions:',
+                  style: TextStyle(fontSize: 14),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  '1. User Responsibilities',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  '• You must provide accurate and complete information when creating your account.\n'
+                  '• You are responsible for maintaining the confidentiality of your account credentials.\n'
+                  '• You agree to use the application only for lawful purposes.',
+                  style: TextStyle(fontSize: 14),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  '2. Service Usage',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  '• Our platform connects users with automotive service providers and spare parts.\n'
+                  '• We strive to provide accurate information but cannot guarantee the quality of services.\n'
+                  '• Users should verify service provider credentials and reviews before booking.',
+                  style: TextStyle(fontSize: 14),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  '3. Privacy and Data Protection',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  '• We collect and process personal information in accordance with our Privacy Policy.\n'
+                  '• Your data is stored securely and used only for providing our services.\n'
+                  '• We do not share your personal information with third parties without your consent.',
+                  style: TextStyle(fontSize: 14),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  '4. Payment and Transactions',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  '• All payments are processed securely through our payment partners.\n'
+                  '• You agree to pay for services booked through our platform.\n'
+                  '• Refunds are subject to the service provider\'s cancellation policy.',
+                  style: TextStyle(fontSize: 14),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  '5. Limitation of Liability',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  '• Auto RevOp acts as a platform connecting users with service providers.\n'
+                  '• We are not responsible for the quality or outcome of services provided.\n'
+                  '• Our liability is limited to the amount paid for services through our platform.',
+                  style: TextStyle(fontSize: 14),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  '6. Account Termination',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  '• We reserve the right to suspend or terminate accounts that violate these terms.\n'
+                  '• Users may delete their accounts at any time.\n'
+                  '• Upon termination, your right to use the service ceases immediately.',
+                  style: TextStyle(fontSize: 14),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'By agreeing to these terms, you acknowledge that you have read, understood, and accept all the conditions outlined above.',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  _acceptTerms = true;
+                });
+                Navigator.of(context).pop();
+              },
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.blue,
+                textStyle: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              child: const Text('Agree'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   Future<void> _signup() async {
+    // Check if terms are accepted
+    if (!_acceptTerms) {
+      final snackBar = SnackBar(
+        elevation: 0,
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: Colors.transparent,
+        content: AwesomeSnackbarContent(
+          title: 'Terms Required!',
+          message: 'Please accept the Terms and Conditions to continue.',
+          contentType: ContentType.warning,
+        ),
+      );
+
+      ScaffoldMessenger.of(context).showSnackBar(snackBar);
+      return;
+    }
+
     if (_passwordController.text != _confirmPasswordController.text) {
       final snackBar = SnackBar(
         elevation: 0,
@@ -203,7 +378,7 @@ class _SignupPageState extends State<SignupPage> {
   Widget build(BuildContext context) {
     return Platform.isIOS
         ? CupertinoPageScaffold(
-            backgroundColor: CupertinoColors.systemBackground,
+            backgroundColor: Colors.white,
             child: SafeArea(
               child: Center(
                 child: SingleChildScrollView(
@@ -240,6 +415,14 @@ class _SignupPageState extends State<SignupPage> {
                       CupertinoTextField(
                         controller: _nameController,
                         placeholder: 'Full Name',
+                        placeholderStyle: TextStyle(color: Colors.black),
+                        style: TextStyle(color: Colors.black),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          border: Border(
+                            bottom: BorderSide(color: Colors.black, width: 1.0),
+                          ),
+                        ),
                         prefix: Padding(
                           padding: EdgeInsets.only(left: 16.0),
                           child: Icon(
@@ -253,6 +436,14 @@ class _SignupPageState extends State<SignupPage> {
                       CupertinoTextField(
                         controller: _emailController,
                         placeholder: 'Email Address',
+                        placeholderStyle: TextStyle(color: Colors.black),
+                        style: TextStyle(color: Colors.black),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          border: Border(
+                            bottom: BorderSide(color: Colors.black, width: 1.0),
+                          ),
+                        ),
                         prefix: Padding(
                           padding: EdgeInsets.only(left: 16.0),
                           child: Icon(
@@ -267,6 +458,14 @@ class _SignupPageState extends State<SignupPage> {
                       CupertinoTextField(
                         controller: _phoneController,
                         placeholder: 'Phone',
+                        placeholderStyle: TextStyle(color: Colors.black),
+                        style: TextStyle(color: Colors.black),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          border: Border(
+                            bottom: BorderSide(color: Colors.black, width: 1.0),
+                          ),
+                        ),
                         prefix: Padding(
                           padding: EdgeInsets.only(left: 16.0),
                           child: Icon(
@@ -294,13 +493,27 @@ class _SignupPageState extends State<SignupPage> {
                                       'Rwanda',
                                       'Kenya',
                                       'Tanzania',
+                                      'Cameroon',
+                                      'South Africa',
+                                      'Cote d\'Ivoire',
+                                      'Botswana',
+                                      'Nigeria',
+                                      'Ghana',
+                                      'DRC',
                                     ][index];
                                   });
                                 },
                                 children: [
-                                  Text('🇷🇼 Rwanda'),
-                                  Text('🇰🇪 Kenya'),
-                                  Text('🇹🇿 Tanzania'),
+                                  Text('🇷🇼 Rwanda', style: TextStyle(color: Colors.black)),
+                                  Text('🇰🇪 Kenya', style: TextStyle(color: Colors.black)),
+                                  Text('🇹🇿 Tanzania', style: TextStyle(color: Colors.black)),
+                                  Text('🇨🇲 Cameroon', style: TextStyle(color: Colors.black)),
+                                  Text('🇿🇦 South Africa', style: TextStyle(color: Colors.black)),
+                                  Text('🇨🇮 Cote d\'Ivoire', style: TextStyle(color: Colors.black)),
+                                  Text('🇧🇼 Botswana', style: TextStyle(color: Colors.black)),
+                                  Text('🇳🇬 Nigeria', style: TextStyle(color: Colors.black)),
+                                  Text('🇬🇭 Ghana', style: TextStyle(color: Colors.black)),
+                                  Text('🇨🇩 DRC', style: TextStyle(color: Colors.black)),
                                 ],
                               ),
                             ),
@@ -309,10 +522,11 @@ class _SignupPageState extends State<SignupPage> {
                         child: Container(
                           padding: EdgeInsets.all(16.0),
                           decoration: BoxDecoration(
+                            color: Colors.white,
                             border: Border(
                               bottom: BorderSide(
-                                color: CupertinoColors.systemGrey,
-                                width: 0.5,
+                                color: Colors.black,
+                                width: 1.0,
                               ),
                             ),
                           ),
@@ -325,7 +539,7 @@ class _SignupPageState extends State<SignupPage> {
                               SizedBox(width: 16),
                               Text(
                                 selectedCountry ?? 'Select Country',
-                                style: TextStyle(color: CupertinoColors.label),
+                                style: TextStyle(color: Colors.black),
                               ),
                             ],
                           ),
@@ -335,6 +549,14 @@ class _SignupPageState extends State<SignupPage> {
                       CupertinoTextField(
                         controller: _passwordController,
                         placeholder: 'Password',
+                        placeholderStyle: TextStyle(color: Colors.black),
+                        style: TextStyle(color: Colors.black),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          border: Border(
+                            bottom: BorderSide(color: Colors.black, width: 1.0),
+                          ),
+                        ),
                         prefix: Padding(
                           padding: EdgeInsets.only(left: 16.0),
                           child: Icon(
@@ -364,6 +586,14 @@ class _SignupPageState extends State<SignupPage> {
                       CupertinoTextField(
                         controller: _confirmPasswordController,
                         placeholder: 'Confirm Password',
+                        placeholderStyle: TextStyle(color: Colors.black),
+                        style: TextStyle(color: Colors.black),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          border: Border(
+                            bottom: BorderSide(color: Colors.black, width: 1.0),
+                          ),
+                        ),
                         prefix: Padding(
                           padding: EdgeInsets.only(left: 16.0),
                           child: Icon(
@@ -390,8 +620,46 @@ class _SignupPageState extends State<SignupPage> {
                         obscureText: _obscureConfirmPassword,
                         keyboardType: TextInputType.visiblePassword,
                       ),
+                      SizedBox(height: 20),
+                      // Terms and Conditions Checkbox
+                      Row(
+                        children: [
+                          CupertinoCheckbox(
+                            value: _acceptTerms,
+                            onChanged: (bool? value) {
+                              setState(() {
+                                _acceptTerms = value ?? false;
+                              });
+                            },
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: RichText(
+                              text: TextSpan(
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: CupertinoColors.label,
+                                ),
+                                children: [
+                                  const TextSpan(text: 'I accept the '),
+                                  TextSpan(
+                                    text: 'Terms and Conditions',
+                                    style: const TextStyle(
+                                      color: CupertinoColors.activeBlue,
+                                      decoration: TextDecoration.underline,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                    recognizer: TapGestureRecognizer()
+                                      ..onTap = _showTermsAndConditions,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                       SizedBox(height: 30),
-                      adaptiveButton('Signup', _signup),
+                      adaptiveButton('Signup', _signup, isEnabled: _acceptTerms),
                       SizedBox(height: 20),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -457,13 +725,20 @@ class _SignupPageState extends State<SignupPage> {
                     SizedBox(height: 30),
                     TextField(
                       controller: _nameController,
+                      style: TextStyle(color: Colors.black),
                       decoration: InputDecoration(
                         labelText: 'Full Name',
+                        labelStyle: TextStyle(color: Colors.black),
                         prefixIcon: Icon(
                           CupertinoIcons.person,
                           color: Colors.grey,
                         ),
-                        border: UnderlineInputBorder(),
+                        border: UnderlineInputBorder(
+                          borderSide: BorderSide(color: Colors.black),
+                        ),
+                        enabledBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(color: Colors.black),
+                        ),
                         focusedBorder: UnderlineInputBorder(
                           borderSide: BorderSide(
                             color: Color.fromRGBO(17, 131, 192, 1),
@@ -471,18 +746,27 @@ class _SignupPageState extends State<SignupPage> {
                           ),
                         ),
                         contentPadding: EdgeInsets.all(16.0),
+                        fillColor: Colors.white,
+                        filled: true,
                       ),
                     ),
                     SizedBox(height: 15),
                     TextField(
                       controller: _emailController,
+                      style: TextStyle(color: Colors.black),
                       decoration: InputDecoration(
                         labelText: 'Email Address',
+                        labelStyle: TextStyle(color: Colors.black),
                         prefixIcon: Icon(
                           CupertinoIcons.mail,
                           color: Colors.grey,
                         ),
-                        border: UnderlineInputBorder(),
+                        border: UnderlineInputBorder(
+                          borderSide: BorderSide(color: Colors.black),
+                        ),
+                        enabledBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(color: Colors.black),
+                        ),
                         focusedBorder: UnderlineInputBorder(
                           borderSide: BorderSide(
                             color: Color.fromRGBO(17, 131, 192, 1),
@@ -490,19 +774,28 @@ class _SignupPageState extends State<SignupPage> {
                           ),
                         ),
                         contentPadding: EdgeInsets.all(16.0),
+                        fillColor: Colors.white,
+                        filled: true,
                       ),
                       keyboardType: TextInputType.emailAddress,
                     ),
                     SizedBox(height: 15),
                     TextField(
                       controller: _phoneController,
+                      style: TextStyle(color: Colors.black),
                       decoration: InputDecoration(
                         labelText: 'Phone',
+                        labelStyle: TextStyle(color: Colors.black),
                         prefixIcon: Icon(
                           CupertinoIcons.phone,
                           color: Colors.grey,
                         ),
-                        border: UnderlineInputBorder(),
+                        border: UnderlineInputBorder(
+                          borderSide: BorderSide(color: Colors.black),
+                        ),
+                        enabledBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(color: Colors.black),
+                        ),
                         focusedBorder: UnderlineInputBorder(
                           borderSide: BorderSide(
                             color: Color.fromRGBO(17, 131, 192, 1),
@@ -510,19 +803,29 @@ class _SignupPageState extends State<SignupPage> {
                           ),
                         ),
                         contentPadding: EdgeInsets.all(16.0),
+                        fillColor: Colors.white,
+                        filled: true,
                       ),
                       keyboardType: TextInputType.phone,
                     ),
                     SizedBox(height: 15),
                     DropdownButtonFormField<String>(
                       initialValue: selectedCountry,
+                      style: TextStyle(color: Colors.black),
+                      dropdownColor: Colors.white,
                       decoration: InputDecoration(
                         labelText: 'Country',
+                        labelStyle: TextStyle(color: Colors.black),
                         prefixIcon: Icon(
                           CupertinoIcons.globe,
                           color: Colors.grey,
                         ),
-                        border: UnderlineInputBorder(),
+                        border: UnderlineInputBorder(
+                          borderSide: BorderSide(color: Colors.black),
+                        ),
+                        enabledBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(color: Colors.black),
+                        ),
                         focusedBorder: UnderlineInputBorder(
                           borderSide: BorderSide(
                             color: Color.fromRGBO(17, 131, 192, 1),
@@ -530,21 +833,51 @@ class _SignupPageState extends State<SignupPage> {
                           ),
                         ),
                         contentPadding: EdgeInsets.all(16.0),
+                        fillColor: Colors.white,
+                        filled: true,
                       ),
                       items: [
                         DropdownMenuItem(
                           value: 'Rwanda',
-                          child: Row(children: [Text('🇷🇼 '), Text('Rwanda')]),
+                          child: Row(children: [Text('🇷🇼 ', style: TextStyle(color: Colors.black)), Text('Rwanda', style: TextStyle(color: Colors.black))]),
                         ),
                         DropdownMenuItem(
                           value: 'Kenya',
-                          child: Row(children: [Text('🇰🇪 '), Text('Kenya')]),
+                          child: Row(children: [Text('🇰🇪 ', style: TextStyle(color: Colors.black)), Text('Kenya', style: TextStyle(color: Colors.black))]),
                         ),
                         DropdownMenuItem(
                           value: 'Tanzania',
                           child: Row(
-                            children: [Text('🇹🇿 '), Text('Tanzania')],
+                            children: [Text('🇹🇿 ', style: TextStyle(color: Colors.black)), Text('Tanzania', style: TextStyle(color: Colors.black))],
                           ),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Cameroon',
+                          child: Row(children: [Text('🇨🇲 ', style: TextStyle(color: Colors.black)), Text('Cameroon', style: TextStyle(color: Colors.black))]),
+                        ),
+                        DropdownMenuItem(
+                          value: 'South Africa',
+                          child: Row(children: [Text('🇿🇦 ', style: TextStyle(color: Colors.black)), Text('South Africa', style: TextStyle(color: Colors.black))]),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Cote d\'Ivoire',
+                          child: Row(children: [Text('🇨🇮 ', style: TextStyle(color: Colors.black)), Text('Cote d\'Ivoire', style: TextStyle(color: Colors.black))]),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Botswana',
+                          child: Row(children: [Text('🇧🇼 ', style: TextStyle(color: Colors.black)), Text('Botswana', style: TextStyle(color: Colors.black))]),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Nigeria',
+                          child: Row(children: [Text('🇳🇬 ', style: TextStyle(color: Colors.black)), Text('Nigeria', style: TextStyle(color: Colors.black))]),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Ghana',
+                          child: Row(children: [Text('🇬🇭 ', style: TextStyle(color: Colors.black)), Text('Ghana', style: TextStyle(color: Colors.black))]),
+                        ),
+                        DropdownMenuItem(
+                          value: 'DRC',
+                          child: Row(children: [Text('🇨🇩 ', style: TextStyle(color: Colors.black)), Text('DRC', style: TextStyle(color: Colors.black))]),
                         ),
                       ],
                       onChanged: (value) {
@@ -556,8 +889,10 @@ class _SignupPageState extends State<SignupPage> {
                     SizedBox(height: 15),
                     TextField(
                       controller: _passwordController,
+                      style: TextStyle(color: Colors.black),
                       decoration: InputDecoration(
                         labelText: 'Password',
+                        labelStyle: TextStyle(color: Colors.black),
                         prefixIcon: Icon(
                           CupertinoIcons.lock,
                           color: Colors.grey,
@@ -575,7 +910,12 @@ class _SignupPageState extends State<SignupPage> {
                             });
                           },
                         ),
-                        border: UnderlineInputBorder(),
+                        border: UnderlineInputBorder(
+                          borderSide: BorderSide(color: Colors.black),
+                        ),
+                        enabledBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(color: Colors.black),
+                        ),
                         focusedBorder: UnderlineInputBorder(
                           borderSide: BorderSide(
                             color: Color.fromRGBO(17, 131, 192, 1),
@@ -583,6 +923,8 @@ class _SignupPageState extends State<SignupPage> {
                           ),
                         ),
                         contentPadding: EdgeInsets.all(16.0),
+                        fillColor: Colors.white,
+                        filled: true,
                       ),
                       obscureText: _obscurePassword,
                       keyboardType: TextInputType.visiblePassword,
@@ -590,8 +932,10 @@ class _SignupPageState extends State<SignupPage> {
                     SizedBox(height: 15),
                     TextField(
                       controller: _confirmPasswordController,
+                      style: TextStyle(color: Colors.black),
                       decoration: InputDecoration(
                         labelText: 'Confirm Password',
+                        labelStyle: TextStyle(color: Colors.black),
                         prefixIcon: Icon(
                           CupertinoIcons.lock,
                           color: Colors.grey,
@@ -610,7 +954,12 @@ class _SignupPageState extends State<SignupPage> {
                             });
                           },
                         ),
-                        border: UnderlineInputBorder(),
+                        border: UnderlineInputBorder(
+                          borderSide: BorderSide(color: Colors.black),
+                        ),
+                        enabledBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(color: Colors.black),
+                        ),
                         focusedBorder: UnderlineInputBorder(
                           borderSide: BorderSide(
                             color: Color.fromRGBO(17, 131, 192, 1),
@@ -618,12 +967,52 @@ class _SignupPageState extends State<SignupPage> {
                           ),
                         ),
                         contentPadding: EdgeInsets.all(16.0),
+                        fillColor: Colors.white,
+                        filled: true,
                       ),
                       obscureText: _obscureConfirmPassword,
-                      keyboardType: TextInputType.visiblePassword,
-                    ),
-                    SizedBox(height: 30),
-                    adaptiveButton('Signup', _signup),
+                        keyboardType: TextInputType.visiblePassword,
+                      ),
+                      SizedBox(height: 20),
+                      // Terms and Conditions Checkbox
+                      Row(
+                        children: [
+                          Checkbox(
+                            value: _acceptTerms,
+                            onChanged: (bool? value) {
+                              setState(() {
+                                _acceptTerms = value ?? false;
+                              });
+                            },
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: RichText(
+                              text: TextSpan(
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.black87,
+                                ),
+                                children: [
+                                  const TextSpan(text: 'I accept the '),
+                                  TextSpan(
+                                    text: 'Terms and Conditions',
+                                    style: const TextStyle(
+                                      color: Colors.blue,
+                                      decoration: TextDecoration.underline,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                    recognizer: TapGestureRecognizer()
+                                      ..onTap = _showTermsAndConditions,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 30),
+                      adaptiveButton('Signup', _signup, isEnabled: _acceptTerms),
                     SizedBox(height: 20),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,

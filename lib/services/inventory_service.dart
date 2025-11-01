@@ -20,6 +20,13 @@ class InventoryService {
         throw Exception('Failed to load inventory: Status ${response.statusCode}, ${response.body}');
       }
     } catch (e) {
+      // Check if it's a network error (offline)
+      if (e.toString().contains('SocketException') ||
+          e.toString().contains('Connection refused') ||
+          e.toString().contains('Network is unreachable') ||
+          e.toString().contains('Failed host lookup')) {
+        throw Exception('There was an error occurred, please check if you are connected to the internet.');
+      }
       throw Exception('Error fetching inventory: $e');
     }
   }
@@ -41,6 +48,43 @@ class InventoryService {
       }
     } catch (e) {
       throw Exception('Error creating order: $e');
+    }
+  }
+
+  static Future<List<Map<String, dynamic>>> getUserCart(String userId) async {
+    try {
+      final response = await http
+          .get(Uri.parse('$baseUrl/cart/$userId'))
+          .timeout(const Duration(seconds: 15));
+
+      if (response.statusCode == 200) {
+        List<dynamic> data = json.decode(response.body);
+        return data.map((item) => item as Map<String, dynamic>).toList();
+      } else {
+        throw Exception('Failed to fetch cart: Status ${response.statusCode}, ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Error fetching cart: $e');
+    }
+  }
+
+  static Future<Map<String, dynamic>> syncCart(String userId, List<Map<String, dynamic>> cartItems) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/cart/sync/$userId'),
+            headers: {'Content-Type': 'application/json'},
+            body: json.encode({'items': cartItems}),
+          )
+          .timeout(const Duration(seconds: 15));
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        throw Exception('Failed to sync cart: Status ${response.statusCode}, ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Error syncing cart: $e');
     }
   }
 }

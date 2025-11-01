@@ -6,37 +6,166 @@ import 'package:auto_revop/services/inventory_service.dart';
 import 'package:auto_revop/widgets/adaptive_button.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
+import 'package:easy_localization/easy_localization.dart';
 
-import 'translations.dart';
 
 class CheckoutPage extends StatefulWidget {
-   final Map<String, String> translations;
-   final List<SparePart> orderedParts;
-   final String? selectedLanguage;
+  final List<SparePart> orderedParts;
+  final String? selectedLanguage;
 
-   const CheckoutPage({
-     super.key,
-     required this.translations,
-     required this.orderedParts,
-     this.selectedLanguage,
-   });
+  const CheckoutPage({
+    super.key,
+    required this.orderedParts,
+    this.selectedLanguage,
+  });
 
   @override
   _CheckoutPageState createState() => _CheckoutPageState();
 }
 
 class _CheckoutPageState extends State<CheckoutPage> {
-   bool _isTermsAccepted = false;
-   final TextEditingController _locationController = TextEditingController();
-   final TextEditingController _phoneController = TextEditingController();
-   List<SparePart> _inventory = [];
-   bool _isLoading = true;
-   String? _error;
-   String _selectedLanguage = 'English';
+  bool _isTermsAccepted = false;
+  final TextEditingController _locationController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  List<SparePart> _inventory = [];
+  bool _isLoading = true;
+  String? _error;
+  String _selectedLanguage = 'English';
+
+  // Show Terms and Conditions dialog
+  void _showTermsAndConditions() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text(
+            'Terms and Conditions',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const [
+                Text(
+                  'Welcome to Auto RevOp',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'By using our automotive marketplace application, you agree to the following terms and conditions:',
+                  style: TextStyle(fontSize: 14),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  '1. User Responsibilities',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  '• You must provide accurate and complete information when creating your account.\n'
+                  '• You are responsible for maintaining the confidentiality of your account credentials.\n'
+                  '• You agree to use the application only for lawful purposes.',
+                  style: TextStyle(fontSize: 14),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  '2. Service Usage',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  '• Our platform connects users with automotive service providers and spare parts.\n'
+                  '• We strive to provide accurate information but cannot guarantee the quality of services.\n'
+                  '• Users should verify service provider credentials and reviews before booking.',
+                  style: TextStyle(fontSize: 14),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  '3. Privacy and Data Protection',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  '• We collect and process personal information in accordance with our Privacy Policy.\n'
+                  '• Your data is stored securely and used only for providing our services.\n'
+                  '• We do not share your personal information with third parties without your consent.',
+                  style: TextStyle(fontSize: 14),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  '4. Payment and Transactions',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  '• All payments are processed securely through our payment partners.\n'
+                  '• You agree to pay for services booked through our platform.\n'
+                  '• Refunds are subject to the service provider\'s cancellation policy.',
+                  style: TextStyle(fontSize: 14),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  '5. Limitation of Liability',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  '• Auto RevOp acts as a platform connecting users with service providers.\n'
+                  '• We are not responsible for the quality or outcome of services provided.\n'
+                  '• Our liability is limited to the amount paid for services through our platform.',
+                  style: TextStyle(fontSize: 14),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  '6. Account Termination',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  '• We reserve the right to suspend or terminate accounts that violate these terms.\n'
+                  '• Users may delete their accounts at any time.\n'
+                  '• Upon termination, your right to use the service ceases immediately.',
+                  style: TextStyle(fontSize: 14),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'By agreeing to these terms, you acknowledge that you have read, understood, and accept all the conditions outlined above.',
+                  style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  _isTermsAccepted = true;
+                });
+                Navigator.of(context).pop();
+              },
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.blue,
+                textStyle: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              child: const Text('Agree'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // late Map<String, String> translations; // No longer needed with easy_localization
 
   @override
   void initState() {
     super.initState();
+    // Translations are now handled by easy_localization directly
     _selectedLanguage = widget.selectedLanguage ?? 'English';
     _fetchInventory();
   }
@@ -66,21 +195,18 @@ class _CheckoutPageState extends State<CheckoutPage> {
   Future<void> _createOrder() async {
     if (widget.orderedParts.isEmpty) return;
 
-    final part = widget.orderedParts[0];
     final orderData = {
       'customerName': 'Mobile App Customer', // Temporary name for mobile orders
       'customerPhone': _phoneController.text.trim(),
       'customerEmail': '', // Empty string
-      'items': [
-        {
-          'productId': part.id,
-          'productName': part.name,
-          'quantity': 1,
-          'price': part.price,
-          'total': part.price,
-        },
-      ],
-      'totalAmount': part.price,
+      'items': widget.orderedParts.map((part) => {
+        'productId': part.id,
+        'productName': part.name,
+        'quantity': part.quantity,
+        'price': part.price,
+        'total': part.price * part.quantity,
+      }).toList(),
+      'totalAmount': widget.orderedParts.fold(0.0, (sum, part) => sum + (part.price * part.quantity)),
       'deliveryLocation': _locationController.text.trim(),
       'status': 'pending',
       'paymentMethod': 'cash',
@@ -92,16 +218,16 @@ class _CheckoutPageState extends State<CheckoutPage> {
       final result = await InventoryService.createOrder(orderData);
 
       // Navigate to success page with order details
-       Navigator.push(
-         context,
-         MaterialPageRoute(
-           builder: (context) => SuccessPage(
-             location: _locationController.text,
-             phone: _phoneController.text,
-             selectedLanguage: _selectedLanguage,
-           ),
-         ),
-       );
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => SuccessPage(
+            location: _locationController.text,
+            phone: _phoneController.text,
+            selectedLanguage: _selectedLanguage,
+          ),
+        ),
+      );
     } catch (e) {
       setState(() {
         _error = e.toString();
@@ -140,16 +266,20 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
   @override
   Widget build(BuildContext context) {
-    final part = widget.orderedParts.isNotEmpty ? widget.orderedParts[0] : null;
+    final totalItems = widget.orderedParts.length;
+    final totalPrice = widget.orderedParts.fold(0.0, (sum, part) => sum + (part.price * part.quantity));
 
     return Platform.isIOS
         ? CupertinoPageScaffold(
-            backgroundColor: CupertinoColors.systemBackground,
+            backgroundColor: Colors.white,
             navigationBar: CupertinoNavigationBar(
               transitionBetweenRoutes: false,
               middle: Text(
-                widget.translations['order'] ?? 'Order',
-                style: const TextStyle(fontWeight: FontWeight.bold),
+                'order'.tr(),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
               ),
             ),
             child: SafeArea(
@@ -172,8 +302,26 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                 Center(
                                   child: Padding(
                                     padding: const EdgeInsets.all(20.0),
-                                    child: part != null
-                                        ? Image.network(part.image, height: 120)
+                                    child: totalItems > 0
+                                        ? Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Text(
+                                                '$totalItems item${totalItems > 1 ? 's' : ''}',
+                                                style: const TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.black,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 8),
+                                              Icon(
+                                                CupertinoIcons.cart,
+                                                size: 60,
+                                                color: Colors.grey.shade600,
+                                              ),
+                                            ],
+                                          )
                                         : const SizedBox.shrink(),
                                   ),
                                 ),
@@ -193,27 +341,20 @@ class _CheckoutPageState extends State<CheckoutPage> {
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            part?.name ?? 'Unknown Item',
+                            'Order Summary',
                             style: const TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
+                              color: Colors.black,
                             ),
                           ),
                           const SizedBox(height: 8),
                           Row(
                             children: [
                               Text(
-                                "QUANTITY: ${part?.quantity ?? 0}",
+                                "TOTAL ITEMS: $totalItems",
                                 style: TextStyle(
-                                  color: CupertinoColors.secondaryLabel,
-                                  fontSize: 14,
-                                ),
-                              ),
-                              SizedBox(width: 20),
-                              Text(
-                                "SUPPLIER: ${part?.supplier ?? 'N/A'}",
-                                style: TextStyle(
-                                  color: CupertinoColors.secondaryLabel,
+                                  color: Colors.black,
                                   fontSize: 14,
                                 ),
                               ),
@@ -221,9 +362,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
                           ),
                           const SizedBox(height: 12),
                           Text(
-                            "\$${part?.price.toStringAsFixed(2) ?? '0.00'}",
+                            "\$${totalPrice.toStringAsFixed(2)}",
                             style: const TextStyle(
-                              color: CupertinoColors.destructiveRed,
+                              color: Colors.black,
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                             ),
@@ -233,12 +374,18 @@ class _CheckoutPageState extends State<CheckoutPage> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                widget.translations['subtotal'] ?? 'SUBTOTAL',
-                                style: const TextStyle(fontSize: 14),
+                                'subtotal'.tr(),
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.black,
+                                ),
                               ),
                               Text(
-                                "\$${part?.price.toStringAsFixed(2) ?? '0.00'}",
-                                style: const TextStyle(fontSize: 14),
+                                "\$${totalPrice.toStringAsFixed(2)}",
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.blue,
+                                ),
                               ),
                             ],
                           ),
@@ -247,12 +394,18 @@ class _CheckoutPageState extends State<CheckoutPage> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                widget.translations['shipping'] ?? 'SHIPPING',
-                                style: const TextStyle(fontSize: 14),
+                                'shipping'.tr(),
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.black,
+                                ),
                               ),
                               Text(
-                                widget.translations['free'] ?? 'Free',
-                                style: const TextStyle(fontSize: 14),
+                                'free'.tr(),
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.blue,
+                                ),
                               ),
                             ],
                           ),
@@ -261,17 +414,19 @@ class _CheckoutPageState extends State<CheckoutPage> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                widget.translations['total'] ?? 'TOTAL',
+                                'total'.tr(),
                                 style: const TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
+                                  color: Colors.black,
                                 ),
                               ),
                               Text(
-                                "\$${part?.price.toStringAsFixed(2) ?? '0.00'}",
+                                "\$${totalPrice.toStringAsFixed(2)}",
                                 style: const TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
+                                  color: Colors.blue,
                                 ),
                               ),
                             ],
@@ -279,17 +434,36 @@ class _CheckoutPageState extends State<CheckoutPage> {
                           const SizedBox(height: 16),
                           CupertinoTextField(
                             controller: _locationController,
-                            placeholder:
-                                widget.translations['location'] ??
-                                'Delivery Location',
+                            placeholder: 'location'.tr(),
+                            placeholderStyle: TextStyle(color: Colors.black),
+                            style: TextStyle(color: Colors.black),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              border: Border(
+                                bottom: BorderSide(
+                                  color: Colors.black,
+                                  width: 1.0,
+                                ),
+                              ),
+                            ),
                             padding: EdgeInsets.all(16.0),
                             onChanged: (value) => setState(() {}),
                           ),
                           const SizedBox(height: 12),
                           CupertinoTextField(
                             controller: _phoneController,
-                            placeholder:
-                                widget.translations['phone'] ?? 'Phone Number',
+                            placeholder: 'phone'.tr(),
+                            placeholderStyle: TextStyle(color: Colors.black),
+                            style: TextStyle(color: Colors.black),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              border: Border(
+                                bottom: BorderSide(
+                                  color: Colors.black,
+                                  width: 1.0,
+                                ),
+                              ),
+                            ),
                             padding: EdgeInsets.all(16.0),
                             keyboardType: TextInputType.phone,
                             onChanged: (value) => setState(() {}),
@@ -298,7 +472,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                           SizedBox(
                             width: double.infinity,
                             child: adaptiveButton(
-                              widget.translations['checkout'] ?? 'Checkout →',
+                              'checkout'.tr(),
                               _isFormValid && !_isLoading
                                   ? () => _createOrder()
                                   : null,
@@ -318,22 +492,21 @@ class _CheckoutPageState extends State<CheckoutPage> {
                               Expanded(
                                 child: RichText(
                                   text: TextSpan(
-                                    text:
-                                        widget.translations['termsPrefix'] ??
-                                        'by confirming the order, I accept the ',
+                                    text: 'Accept our '.tr(),
                                     style: const TextStyle(
-                                      color: CupertinoColors.label,
+                                      color: Colors.black,
                                       fontSize: 13,
                                     ),
                                     children: [
                                       TextSpan(
-                                        text:
-                                            widget.translations['termsLink'] ??
-                                            'terms of the user agreement',
+                                        text: 'Terms and Conditions',
                                         style: TextStyle(
                                           color: CupertinoColors.activeBlue,
                                           fontWeight: FontWeight.bold,
+                                          decoration: TextDecoration.underline,
                                         ),
+                                        recognizer: TapGestureRecognizer()
+                                          ..onTap = _showTermsAndConditions,
                                       ),
                                     ],
                                   ),
@@ -352,7 +525,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
               backgroundColor: Colors.white,
               elevation: 0,
               title: Text(
-                widget.translations['order'] ?? 'Order',
+                'order'.tr(),
                 style: const TextStyle(
                   color: Colors.black,
                   fontWeight: FontWeight.bold,
@@ -380,8 +553,26 @@ class _CheckoutPageState extends State<CheckoutPage> {
                               Center(
                                 child: Padding(
                                   padding: const EdgeInsets.all(20.0),
-                                  child: part != null
-                                      ? Image.network(part.image, height: 120)
+                                  child: totalItems > 0
+                                      ? Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(
+                                              '$totalItems item${totalItems > 1 ? 's' : ''}',
+                                              style: const TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.black,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 8),
+                                            Icon(
+                                              Icons.shopping_cart,
+                                              size: 60,
+                                              color: Colors.grey.shade600,
+                                            ),
+                                          ],
+                                        )
                                       : const SizedBox.shrink(),
                                 ),
                               ),
@@ -401,7 +592,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          part?.name ?? 'Unknown Item',
+                          'Order Summary',
                           style: const TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
@@ -411,15 +602,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                         Row(
                           children: [
                             Text(
-                              "QUANTITY: ${part?.quantity ?? 0}",
-                              style: TextStyle(
-                                color: Colors.grey,
-                                fontSize: 14,
-                              ),
-                            ),
-                            SizedBox(width: 20),
-                            Text(
-                              "SUPPLIER: ${part?.supplier ?? 'N/A'}",
+                              "TOTAL ITEMS: $totalItems",
                               style: TextStyle(
                                 color: Colors.grey,
                                 fontSize: 14,
@@ -429,7 +612,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          "\$${part?.price.toStringAsFixed(2) ?? '0.00'}",
+                          "\$${totalPrice.toStringAsFixed(2)}",
                           style: const TextStyle(
                             color: Colors.red,
                             fontSize: 18,
@@ -441,11 +624,11 @@ class _CheckoutPageState extends State<CheckoutPage> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              widget.translations['subtotal'] ?? 'SUBTOTAL',
+                              'subtotal'.tr(),
                               style: const TextStyle(fontSize: 14),
                             ),
                             Text(
-                              "\$${part?.price.toStringAsFixed(2) ?? '0.00'}",
+                              "\$${totalPrice.toStringAsFixed(2)}",
                               style: const TextStyle(fontSize: 14),
                             ),
                           ],
@@ -455,11 +638,11 @@ class _CheckoutPageState extends State<CheckoutPage> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              widget.translations['shipping'] ?? 'SHIPPING',
+                              'shipping'.tr(),
                               style: const TextStyle(fontSize: 14),
                             ),
                             Text(
-                              widget.translations['free'] ?? 'Free',
+                              'free'.tr(),
                               style: const TextStyle(fontSize: 14),
                             ),
                           ],
@@ -469,14 +652,14 @@ class _CheckoutPageState extends State<CheckoutPage> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              widget.translations['total'] ?? 'TOTAL',
+                              'total'.tr(),
                               style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                             Text(
-                              "\$${part?.price.toStringAsFixed(2) ?? '0.00'}",
+                              "\$${totalPrice.toStringAsFixed(2)}",
                               style: const TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
@@ -487,15 +670,27 @@ class _CheckoutPageState extends State<CheckoutPage> {
                         const SizedBox(height: 16),
                         TextField(
                           controller: _locationController,
+                          style: TextStyle(color: Colors.black),
                           decoration: InputDecoration(
-                            labelText:
-                                widget.translations['location'] ??
-                                'Delivery Location',
+                            labelText: 'location'.tr(),
+                            labelStyle: TextStyle(color: Colors.black),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide(color: Colors.black),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide(color: Colors.black),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide(
+                                color: Color.fromRGBO(17, 131, 192, 1),
+                                width: 2.0,
+                              ),
                             ),
                             filled: true,
-                            fillColor: Colors.grey.shade100,
+                            fillColor: Colors.white,
                           ),
                           onChanged: (value) => setState(
                             () {},
@@ -504,14 +699,27 @@ class _CheckoutPageState extends State<CheckoutPage> {
                         const SizedBox(height: 12),
                         TextField(
                           controller: _phoneController,
+                          style: TextStyle(color: Colors.black),
                           decoration: InputDecoration(
-                            labelText:
-                                widget.translations['phone'] ?? 'Phone Number',
+                            labelText: 'phone'.tr(),
+                            labelStyle: TextStyle(color: Colors.black),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide(color: Colors.black),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide(color: Colors.black),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide(
+                                color: Color.fromRGBO(17, 131, 192, 1),
+                                width: 2.0,
+                              ),
                             ),
                             filled: true,
-                            fillColor: Colors.grey.shade100,
+                            fillColor: Colors.white,
                           ),
                           keyboardType: TextInputType.phone,
                           onChanged: (value) => setState(
@@ -522,7 +730,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                         SizedBox(
                           width: double.infinity,
                           child: adaptiveButton(
-                            widget.translations['checkout'] ?? 'Checkout →',
+                            'checkout'.tr(),
                             _isFormValid && !_isLoading
                                 ? () => _createOrder()
                                 : null, // Disabled when terms or fields are incomplete or loading
@@ -543,22 +751,21 @@ class _CheckoutPageState extends State<CheckoutPage> {
                             Expanded(
                               child: RichText(
                                 text: TextSpan(
-                                  text:
-                                      widget.translations['termsPrefix'] ??
-                                      'by confirming the order, I accept the ',
+                                  text: 'termsPrefix'.tr(),
                                   style: const TextStyle(
                                     color: Colors.black,
                                     fontSize: 13,
                                   ),
                                   children: [
                                     TextSpan(
-                                      text:
-                                          widget.translations['termsLink'] ??
-                                          'terms of the user agreement',
+                                      text: 'Terms and Conditions',
                                       style: TextStyle(
                                         color: Colors.blue.shade700,
                                         fontWeight: FontWeight.bold,
+                                        decoration: TextDecoration.underline,
                                       ),
+                                      recognizer: TapGestureRecognizer()
+                                        ..onTap = _showTermsAndConditions,
                                     ),
                                   ],
                                 ),

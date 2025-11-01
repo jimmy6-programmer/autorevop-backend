@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/adaptive_button.dart';
 import '../utils/api_utils.dart'; // For getApiBaseUrl
 import '../utils/auth_utils.dart'; // For authentication utilities
@@ -22,8 +21,13 @@ class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  bool _isLoading = false;
 
   Future<void> _login() async {
+    setState(() {
+      _isLoading = true;
+    });
+
     final response = await http.post(
       Uri.parse('${getApiBaseUrl()}/api/auth/login'),
       headers: {'Content-Type': 'application/json'},
@@ -39,9 +43,16 @@ class _LoginPageState extends State<LoginPage> {
         final token = data['token'];
         final userId = data['user']?['_id'] ?? data['user']?['id'] ?? '';
         final email = data['user']?['email'] ?? _emailController.text;
+        final name = data['user']?['name'];
+        final phone = data['user']?['phone'];
+        final country = data['user']?['country'];
 
         // Store authentication data using AuthUtils
-        await AuthUtils.setAuthData(token, userId, email);
+        await AuthUtils.setAuthData(token, userId, email, name: name, phone: phone, country: country);
+
+        setState(() {
+          _isLoading = false;
+        });
 
         if (Platform.isIOS) {
           // For iOS, show success dialog and navigate
@@ -82,6 +93,10 @@ class _LoginPageState extends State<LoginPage> {
           });
         }
       } catch (e) {
+        setState(() {
+          _isLoading = false;
+        });
+
         if (Platform.isIOS) {
           showCupertinoDialog(
             context: context,
@@ -113,6 +128,10 @@ class _LoginPageState extends State<LoginPage> {
         }
       }
     } else {
+      setState(() {
+        _isLoading = false;
+      });
+
       try {
         final data = json.decode(response.body);
         if (Platform.isIOS) {
@@ -190,7 +209,7 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Platform.isIOS
         ? CupertinoPageScaffold(
-            backgroundColor: CupertinoColors.systemBackground,
+            backgroundColor: Colors.white,
             child: SafeArea(
               child: Center(
                 child: SingleChildScrollView(
@@ -227,11 +246,16 @@ class _LoginPageState extends State<LoginPage> {
                       CupertinoTextField(
                         controller: _emailController,
                         placeholder: 'Email Address',
+                        placeholderStyle: TextStyle(color: Colors.black),
+                        style: TextStyle(color: Colors.black),
+                        decoration: BoxDecoration(
+                          color: const Color.fromARGB(255, 235, 233, 233),
+                        ),
                         prefix: Padding(
                           padding: EdgeInsets.only(left: 16.0),
                           child: Icon(
                             CupertinoIcons.mail,
-                            color: CupertinoColors.systemGrey,
+                            color: const Color.fromARGB(255, 35, 35, 35),
                           ),
                         ),
                         padding: EdgeInsets.all(16.0),
@@ -241,11 +265,16 @@ class _LoginPageState extends State<LoginPage> {
                       CupertinoTextField(
                         controller: _passwordController,
                         placeholder: 'Password',
+                        placeholderStyle: TextStyle(color: Colors.black),
+                        style: TextStyle(color: Colors.black),
+                        decoration: BoxDecoration(
+                          color: const Color.fromARGB(255, 235, 233, 233),
+                        ),
                         prefix: Padding(
                           padding: EdgeInsets.only(left: 16.0),
                           child: Icon(
                             CupertinoIcons.lock,
-                            color: CupertinoColors.systemGrey,
+                            color: const Color.fromARGB(255, 35, 35, 35),
                           ),
                         ),
                         suffix: CupertinoButton(
@@ -292,7 +321,7 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ),
                       SizedBox(height: 30),
-                      adaptiveButton('Login', _login),
+                      adaptiveButton('Login', _login, isLoading: _isLoading),
                       SizedBox(height: 20),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -440,7 +469,7 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                     SizedBox(height: 30),
-                    adaptiveButton('Login', _login),
+                    adaptiveButton('Login', _login, isLoading: _isLoading),
                     SizedBox(height: 20),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,

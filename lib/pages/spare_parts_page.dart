@@ -1,19 +1,20 @@
 import 'dart:io' show Platform;
 import 'package:auto_revop/models/spare_part_model.dart';
-import 'package:auto_revop/pages/checkout_page.dart';
+import 'package:auto_revop/models/cart_item_model.dart';
 import 'package:auto_revop/services/inventory_service.dart';
 import 'package:auto_revop/widgets/adaptive_button.dart' as widgets;
-
+import 'package:auto_revop/widgets/cart_icon_button.dart';
+import 'package:provider/provider.dart';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../utils/auth_utils.dart'; // For authentication
+import '../providers/translation_provider.dart';
+import '../providers/cart_provider.dart';
 
 class SparePartsPage extends StatefulWidget {
-  final Map<String, String> translations;
-
-  const SparePartsPage({super.key, required this.translations});
+  const SparePartsPage({super.key});
 
   @override
   _SparePartsPageState createState() => _SparePartsPageState();
@@ -29,6 +30,7 @@ class _SparePartsPageState extends State<SparePartsPage> {
   @override
   void initState() {
     super.initState();
+    // Translations are now handled by easy_localization directly
     _fetchInventory();
     _searchController.addListener(_onSearchChanged);
   }
@@ -50,7 +52,9 @@ class _SparePartsPageState extends State<SparePartsPage> {
       });
     } catch (e) {
       setState(() {
-        _error = e.toString();
+        _error = e.toString().contains('connected to the internet')
+            ? 'There was an error occurred, please check if you are connected to the internet.'
+            : e.toString();
         _isLoading = false;
       });
     }
@@ -69,16 +73,21 @@ class _SparePartsPageState extends State<SparePartsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final localeProvider = Provider.of<LocaleProvider>(context);
+
     return Platform.isIOS
         ? CupertinoPageScaffold(
+            backgroundColor: Colors.white,
             navigationBar: CupertinoNavigationBar(
+              backgroundColor: Colors.white,
               transitionBetweenRoutes: false,
+              // leading: const CartIconButton(),
               middle: Text(
-                widget.translations['partsPage'] ?? 'Parts',
+                localeProvider.translate('partsPage'),
                 style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: CupertinoColors.label,
+                  color: Colors.black,
                 ),
               ),
             ),
@@ -89,18 +98,40 @@ class _SparePartsPageState extends State<SparePartsPage> {
                     padding: const EdgeInsets.all(16.0),
                     child: CupertinoSearchTextField(
                       controller: _searchController,
-                      placeholder:
-                          widget.translations['searchSpareParts'] ??
-                          'Search Spare Parts',
-                      prefixIcon: const Icon(CupertinoIcons.search),
-                      style: const TextStyle(color: CupertinoColors.black),
+                      placeholder: localeProvider.translate('searchSpareParts'),
+                      placeholderStyle: TextStyle(color: Colors.black),
+                      prefixIcon: const Icon(
+                        CupertinoIcons.search,
+                        color: Colors.black,
+                      ),
+                      style: const TextStyle(color: Colors.black),
+                      backgroundColor: Colors.white,
+                      borderRadius: BorderRadius.circular(8.0),
                     ),
                   ),
                   Expanded(
                     child: _isLoading
                         ? const Center(child: CupertinoActivityIndicator())
                         : _error != null
-                        ? Center(child: Text('Error: $_error'))
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text('Error: $_error'),
+                                const SizedBox(height: 16),
+                                widgets.adaptiveButton(
+                                  'Retry',
+                                  () {
+                                    setState(() {
+                                      _error = null;
+                                      _isLoading = true;
+                                    });
+                                    _fetchInventory();
+                                  },
+                                ),
+                              ],
+                            ),
+                          )
                         : ListView.builder(
                             itemCount: _filteredSpareParts.length,
                             itemBuilder: (context, index) {
@@ -116,7 +147,7 @@ class _SparePartsPageState extends State<SparePartsPage> {
         : Scaffold(
             appBar: AppBar(
               title: Text(
-                widget.translations['partsPage'] ?? 'Parts',
+                localeProvider.translate('partsPage'),
                 style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -126,6 +157,9 @@ class _SparePartsPageState extends State<SparePartsPage> {
               backgroundColor: Colors.white,
               elevation: 0,
               iconTheme: const IconThemeData(color: Colors.black87),
+              leading: const CartIconButton(),
+              automaticallyImplyLeading: false,
+              actions: const [SizedBox(width: 48)], // Balance the layout
             ),
             body: Column(
               children: [
@@ -134,9 +168,7 @@ class _SparePartsPageState extends State<SparePartsPage> {
                   child: TextField(
                     controller: _searchController,
                     decoration: InputDecoration(
-                      hintText:
-                          widget.translations['searchSpareParts'] ??
-                          'Search Spare Parts',
+                      hintText: localeProvider.translate('searchSpareParts'),
                       prefixIcon: const Icon(Icons.search),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(25),
@@ -151,7 +183,25 @@ class _SparePartsPageState extends State<SparePartsPage> {
                   child: _isLoading
                       ? const Center(child: CircularProgressIndicator())
                       : _error != null
-                      ? Center(child: Text('Error: $_error'))
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text('Error: $_error'),
+                              const SizedBox(height: 16),
+                              widgets.adaptiveButton(
+                                'Retry',
+                                () {
+                                  setState(() {
+                                    _error = null;
+                                    _isLoading = true;
+                                  });
+                                  _fetchInventory();
+                                },
+                              ),
+                            ],
+                          ),
+                        )
                       : ListView.builder(
                           itemCount: _filteredSpareParts.length,
                           itemBuilder: (context, index) {
@@ -240,26 +290,74 @@ class _SparePartsPageState extends State<SparePartsPage> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                Center(
-                  child: widgets.adaptiveButton(
-                    widget.translations['buyNow'] ?? 'Buy Now',
-                    () async {
-                      // Check authentication before proceeding to checkout
-                      final isAuthenticated = await AuthUtils.checkAuthAndRedirect(context, widget.translations);
-                      if (isAuthenticated) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => CheckoutPage(
-                              translations: widget.translations,
-                              orderedParts: [part],
-                              selectedLanguage: 'English', // Default for now
-                            ),
-                          ),
-                        );
-                      }
-                    },
-                  ),
+                Consumer<CartProvider>(
+                  builder: (context, cartProvider, child) {
+                    final isInCart = cartProvider.isInCart(part.id);
+                    return Center(
+                      child: widgets.adaptiveButton(
+                        isInCart
+                            ? Provider.of<LocaleProvider>(
+                                context,
+                              ).translate('Added To Cart')
+                            : Provider.of<LocaleProvider>(
+                                context,
+                              ).translate('Add To Cart'),
+                        isInCart
+                            ? null
+                            : () async {
+                                // Check authentication before adding to cart
+                                final isAuthenticated =
+                                    await AuthUtils.checkAuthAndRedirect(
+                                      context,
+                                      {},
+                                    );
+                                if (isAuthenticated) {
+                                  final cartItem = CartItem(
+                                    id: DateTime.now().millisecondsSinceEpoch
+                                        .toString(),
+                                    productId: part.id,
+                                    name: part.name,
+                                    description: part.description,
+                                    image: part.image,
+                                    price: part.price,
+                                  );
+                                  cartProvider.addItem(cartItem);
+
+                                  // Show snackbar feedback
+                                  if (Platform.isIOS) {
+                                    showCupertinoDialog(
+                                      context: context,
+                                      builder: (BuildContext context) {
+                                        return CupertinoAlertDialog(
+                                          title: Text('Added to Cart'),
+                                          content: Text(
+                                            '${part.name} has been added to your cart.',
+                                          ),
+                                          actions: [
+                                            CupertinoDialogAction(
+                                              child: Text('OK'),
+                                              onPressed: () =>
+                                                  Navigator.of(context).pop(),
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                    );
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          '${part.name} added to cart',
+                                        ),
+                                        duration: const Duration(seconds: 2),
+                                      ),
+                                    );
+                                  }
+                                }
+                              },
+                      ),
+                    );
+                  },
                 ),
               ],
             ),

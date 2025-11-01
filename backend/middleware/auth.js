@@ -10,6 +10,10 @@ const auth = (req, res, next) => {
     req.user = decoded.user;
     next();
   } catch (err) {
+    // Check if token is expired
+    if (err.name === 'TokenExpiredError') {
+      return res.status(401).json({ message: 'Token expired, please login again' });
+    }
     res.status(401).json({ message: 'Token is not valid' });
   }
 };

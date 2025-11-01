@@ -2,9 +2,12 @@ import 'dart:io' show Platform;
 import 'loading/loading_page.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:lottie/lottie.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'pages/translations.dart';
+import 'package:provider/provider.dart';
+import 'providers/translation_provider.dart';
+import 'providers/cart_provider.dart';
 import 'pages/starting_page.dart';
 import 'pages/login_page.dart';
 import 'pages/signup_page.dart';
@@ -15,6 +18,8 @@ import 'pages/second_onboarding_page.dart';
 import 'pages/mechanics_page.dart';
 import 'pages/spare_parts_page.dart';
 import 'pages/bookings_page.dart';
+import 'pages/cart_page.dart';
+import 'utils/auth_utils.dart';
 
 // API Base URL configuration
 String getApiBaseUrl() {
@@ -23,17 +28,34 @@ String getApiBaseUrl() {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final prefs = await SharedPreferences.getInstance();
-  final hasSeenOnboarding = prefs.getBool('hasSeenOnboarding') ?? false;
 
   // Preload Lottie animation
   await precacheLottie();
 
-  // For fresh testing, always start from beginning
-  // Comment out the line below to test normal flow
-  // await prefs.clear(); // Uncomment to clear all data for fresh testing
+  // Get SharedPreferences for onboarding and login status
+  final prefs = await SharedPreferences.getInstance();
+  final hasSeenOnboarding = prefs.getBool('hasSeenOnboarding') ?? false;
+  final isLoggedIn = await AuthUtils.isLoggedIn();
 
-  runApp(MyApp(initialRoute: hasSeenOnboarding ? '/login' : '/'));
+  // Determine initial route
+  String initialRoute;
+  if (!hasSeenOnboarding) {
+    initialRoute = '/';
+  } else if (isLoggedIn) {
+    initialRoute = '/home';
+  } else {
+    initialRoute = '/login';
+  }
+
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => LocaleProvider()),
+        ChangeNotifierProvider(create: (context) => CartProvider()),
+      ],
+      child: MyApp(initialRoute: initialRoute),
+    ),
+  );
 }
 
 Future<void> precacheLottie() async {
@@ -47,10 +69,6 @@ class MyApp extends StatelessWidget {
   const MyApp({super.key, required this.initialRoute});
 
   Route<dynamic> _generateRoute(RouteSettings settings) {
-    // Default language for translations
-    const String defaultLanguage = 'English';
-    final Map<String, String> defaultTranslations = translations[defaultLanguage]!;
-
     Widget page;
 
     switch (settings.name) {
@@ -73,16 +91,19 @@ class MyApp extends StatelessWidget {
         page = const HomePage();
         break;
       case '/profile':
-        page = ProfilePage(translations: defaultTranslations);
+        page = ProfilePage();
         break;
       case '/mechanics':
-        page = MechanicsPage(translations: defaultTranslations);
+        page = MechanicsPage();
         break;
       case '/spare_parts':
-        page = SparePartsPage(translations: defaultTranslations);
+        page = SparePartsPage();
         break;
       case '/bookings':
-        page = BookingsPage(translations: defaultTranslations);
+        page = BookingsPage();
+        break;
+      case '/cart':
+        page = const CartPage();
         break;
       default:
         page = const StartingPage();
@@ -90,7 +111,8 @@ class MyApp extends StatelessWidget {
 
     // Wrap the destination page in LoadingPageWrapper
     return PageRouteBuilder(
-      pageBuilder: (context, _, __) => LoadingPageWrapper(destinationPage: page),
+      pageBuilder: (context, _, __) =>
+          LoadingPageWrapper(destinationPage: page),
       settings: settings,
       transitionDuration: Duration.zero, // Immediate transition
     );
@@ -98,26 +120,57 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Platform.isIOS
-        ? CupertinoApp(
-            title: 'Auto RevOp',
-            debugShowCheckedModeBanner: false,
-            theme: const CupertinoThemeData(
-              primaryColor: CupertinoColors.activeBlue,
-            ),
-            initialRoute: initialRoute,
-            onGenerateRoute: _generateRoute,
-          )
-        : MaterialApp(
-            title: 'Auto RevOp',
-            debugShowCheckedModeBanner: false,
-            theme: ThemeData(
-              primarySwatch: Colors.blue,
-              fontFamily: 'Roboto',
-            ),
-            initialRoute: initialRoute,
-            onGenerateRoute: _generateRoute,
-          );
+    return Consumer<LocaleProvider>(
+      builder: (context, localeProvider, child) {
+        // Use English for system widgets since we don't have custom locales
+        final effectiveLocale = const Locale('en');
+
+        return Platform.isIOS
+            ? CupertinoApp(
+                title: 'Auto RevOp',
+                debugShowCheckedModeBanner: false,
+                locale: effectiveLocale,
+                localizationsDelegates: const [
+                  GlobalMaterialLocalizations.delegate,
+                  GlobalCupertinoLocalizations.delegate,
+                  GlobalWidgetsLocalizations.delegate,
+                ],
+                supportedLocales: const [
+                  Locale('en'),
+                  Locale('fr'),
+                  Locale('rw'),
+                  Locale('sw'),
+                ],
+                theme: const CupertinoThemeData(
+                  primaryColor: CupertinoColors.activeBlue,
+                ),
+                initialRoute: initialRoute,
+                onGenerateRoute: _generateRoute,
+              )
+            : MaterialApp(
+                title: 'Auto RevOp',
+                debugShowCheckedModeBanner: false,
+                locale: effectiveLocale,
+                localizationsDelegates: const [
+                  GlobalMaterialLocalizations.delegate,
+                  GlobalCupertinoLocalizations.delegate,
+                  GlobalWidgetsLocalizations.delegate,
+                ],
+                supportedLocales: const [
+                  Locale('en'),
+                  Locale('fr'),
+                  Locale('rw'),
+                  Locale('sw'),
+                ],
+                theme: ThemeData(
+                  primarySwatch: Colors.blue,
+                  fontFamily: 'Roboto',
+                ),
+                initialRoute: initialRoute,
+                onGenerateRoute: _generateRoute,
+              );
+      },
+    );
   }
 }
 
@@ -140,7 +193,9 @@ class _LoadingPageWrapperState extends State<LoadingPageWrapper> {
     // Schedule navigation to the destination page after showing loading
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
-      await Future.delayed(const Duration(milliseconds: 500)); // Show loading for 500ms
+      await Future.delayed(
+        const Duration(milliseconds: 500),
+      ); // Show loading for 500ms
       if (mounted) {
         setState(() {
           _showLoading = false; // Switch to destination page

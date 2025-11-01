@@ -2,7 +2,6 @@
 import 'package:auto_revop/pages/resetpassword_page.dart';
 import 'package:auto_revop/widgets/adaptive_button.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 
 class OtpPage extends StatelessWidget {
   const OtpPage({super.key});
@@ -12,17 +11,21 @@ class OtpPage extends StatelessWidget {
     final List<TextEditingController> otpControllers =
         List.generate(5, (index) => TextEditingController());
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
+    return CupertinoPageScaffold(
+      backgroundColor: CupertinoColors.systemBackground,
+      child: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(20.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // 🔙 Back Button
-              IconButton(
-                icon: const Icon(CupertinoIcons.back, color: Colors.blue),
+              CupertinoButton(
+                padding: EdgeInsets.zero,
+                child: Icon(
+                  CupertinoIcons.back,
+                  color: CupertinoColors.activeBlue,
+                ),
                 onPressed: () => Navigator.pop(context),
               ),
               const SizedBox(height: 40),
@@ -31,7 +34,7 @@ class OtpPage extends StatelessWidget {
               Center(
                 child: Column(
                   children: const [
-                    Icon(Icons.vpn_key, size: 80, color: Colors.blue),
+                    Icon(CupertinoIcons.lock_shield_fill, size: 80, color: CupertinoColors.activeBlue),
                     SizedBox(height: 20),
                     Text(
                       "Enter OTP",
@@ -41,7 +44,7 @@ class OtpPage extends StatelessWidget {
                     Text(
                       "Enter the 5-digit code sent to your email",
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.black54),
+                      style: TextStyle(color: CupertinoColors.secondaryLabel),
                     ),
                   ],
                 ),
@@ -55,12 +58,12 @@ class OtpPage extends StatelessWidget {
                   5,
                   (index) => SizedBox(
                     width: 50,
-                    child: TextField(
+                    child: CupertinoTextField(
                       controller: otpControllers[index],
                       textAlign: TextAlign.center,
                       keyboardType: TextInputType.number,
                       maxLength: 1,
-                      decoration: const InputDecoration(counterText: ""),
+                      padding: EdgeInsets.all(12.0),
                     ),
                   ),
                 ),
@@ -72,7 +75,7 @@ class OtpPage extends StatelessWidget {
                 child: adaptiveButton("Continue", () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const ResetPasswordPage()),
+                    CupertinoPageRoute(builder: (context) => const ResetPasswordPage()),
                   );
                 }),
               ),
@@ -81,11 +84,11 @@ class OtpPage extends StatelessWidget {
 
               // 🔄 Resend link
               Center(
-                child: TextButton(
+                child: CupertinoButton(
                   onPressed: () {},
                   child: const Text(
                     "Resend Code",
-                    style: TextStyle(color: Colors.blue),
+                    style: TextStyle(color: CupertinoColors.activeBlue),
                   ),
                 ),
               ),

@@ -1,18 +1,28 @@
-import 'dart:io' show Platform;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:io' show Platform;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class AuthUtils {
   static const String _tokenKey = 'auth_token';
   static const String _userIdKey = 'user_id';
   static const String _userEmailKey = 'user_email';
+  static const String _userNameKey = 'user_name';
+  static const String _userPhoneKey = 'user_phone';
+  static const String _userCountryKey = 'user_country';
+
+  // Create secure storage instance
+  static const FlutterSecureStorage _secureStorage = FlutterSecureStorage();
 
   // Check if user is authenticated
   static Future<bool> isAuthenticated() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString(_tokenKey);
-    return token != null && token.isNotEmpty;
+    try {
+      final token = await _secureStorage.read(key: _tokenKey);
+      return token != null && token.isNotEmpty;
+    } catch (e) {
+      debugPrint('Error checking authentication: $e');
+      return false;
+    }
   }
 
   // Alias for isAuthenticated (for consistency)
@@ -22,110 +32,136 @@ class AuthUtils {
 
   // Get stored token
   static Future<String?> getToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_tokenKey);
+    try {
+      return await _secureStorage.read(key: _tokenKey);
+    } catch (e) {
+      debugPrint('Error getting token: $e');
+      return null;
+    }
   }
 
   // Get stored user ID
   static Future<String?> getUserId() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_userIdKey);
+    try {
+      return await _secureStorage.read(key: _userIdKey);
+    } catch (e) {
+      debugPrint('Error getting user ID: $e');
+      return null;
+    }
   }
 
   // Get stored user email
   static Future<String?> getUserEmail() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_userEmailKey);
+    try {
+      return await _secureStorage.read(key: _userEmailKey);
+    } catch (e) {
+      debugPrint('Error getting user email: $e');
+      return null;
+    }
+  }
+
+  // Get stored user name
+  static Future<String?> getUserName() async {
+    try {
+      return await _secureStorage.read(key: _userNameKey);
+    } catch (e) {
+      debugPrint('Error getting user name: $e');
+      return null;
+    }
+  }
+
+  // Get stored user phone
+  static Future<String?> getUserPhone() async {
+    try {
+      return await _secureStorage.read(key: _userPhoneKey);
+    } catch (e) {
+      debugPrint('Error getting user phone: $e');
+      return null;
+    }
+  }
+
+  // Get stored user country
+  static Future<String?> getUserCountry() async {
+    try {
+      return await _secureStorage.read(key: _userCountryKey);
+    } catch (e) {
+      debugPrint('Error getting user country: $e');
+      return null;
+    }
   }
 
   // Get user data as map
   static Future<Map<String, String>?> getUserData() async {
-    final prefs = await SharedPreferences.getInstance();
-    final userId = prefs.getString(_userIdKey);
-    final email = prefs.getString(_userEmailKey);
+    try {
+      final userId = await _secureStorage.read(key: _userIdKey);
+      final email = await _secureStorage.read(key: _userEmailKey);
+      final name = await _secureStorage.read(key: _userNameKey);
+      final phone = await _secureStorage.read(key: _userPhoneKey);
+      final country = await _secureStorage.read(key: _userCountryKey);
 
-    if (userId != null && email != null) {
-      return {
-        'userId': userId,
-        'email': email,
-        // Note: We don't store name locally, it comes from API
-      };
+      if (userId != null && email != null) {
+        return {
+          'userId': userId,
+          'email': email,
+          'name': name ?? '',
+          'phone': phone ?? '',
+          'country': country ?? '',
+        };
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Error getting user data: $e');
+      return null;
     }
-    return null;
   }
 
   // Store authentication data
-  static Future<void> setAuthData(String token, String userId, String email) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_tokenKey, token);
-    await prefs.setString(_userIdKey, userId);
-    await prefs.setString(_userEmailKey, email);
+  static Future<void> setAuthData(String token, String userId, String email, {String? name, String? phone, String? country}) async {
+    try {
+      await _secureStorage.write(key: _tokenKey, value: token);
+      await _secureStorage.write(key: _userIdKey, value: userId);
+      await _secureStorage.write(key: _userEmailKey, value: email);
+      if (name != null) await _secureStorage.write(key: _userNameKey, value: name);
+      if (phone != null) await _secureStorage.write(key: _userPhoneKey, value: phone);
+      if (country != null) await _secureStorage.write(key: _userCountryKey, value: country);
+    } catch (e) {
+      debugPrint('Error storing auth data: $e');
+      rethrow;
+    }
   }
 
   // Clear authentication data (logout)
   static Future<void> clearAuthData() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_tokenKey);
-    await prefs.remove(_userIdKey);
-    await prefs.remove(_userEmailKey);
+    try {
+      await _secureStorage.delete(key: _tokenKey);
+      await _secureStorage.delete(key: _userIdKey);
+      await _secureStorage.delete(key: _userEmailKey);
+      await _secureStorage.delete(key: _userNameKey);
+      await _secureStorage.delete(key: _userPhoneKey);
+      await _secureStorage.delete(key: _userCountryKey);
+    } catch (e) {
+      debugPrint('Error clearing auth data: $e');
+      rethrow;
+    }
   }
 
   // Check authentication and redirect if needed
   static Future<bool> checkAuthAndRedirect(BuildContext context, Map<String, String> translations) async {
     final isAuth = await isAuthenticated();
+
     if (!isAuth) {
-      // Show login required dialog
+      // For iOS CupertinoTabScaffold, we need to use a different navigation approach
+      // since pushNamed doesn't work within CupertinoTabView
       if (Platform.isIOS) {
-        showCupertinoDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return CupertinoAlertDialog(
-              title: Text(translations['loginRequired'] ?? 'Login Required'),
-              content: Text(translations['loginRequiredMessage'] ?? 'Please login to continue with this action.'),
-              actions: [
-                CupertinoDialogAction(
-                  child: Text(translations['cancel'] ?? 'Cancel'),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-                CupertinoDialogAction(
-                  child: Text(translations['login'] ?? 'Login'),
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    // Navigate to login page
-                    Navigator.pushNamed(context, '/login');
-                  },
-                ),
-              ],
-            );
-          },
-        );
+        // Find the root navigator context
+        final navigator = Navigator.of(context, rootNavigator: true);
+        navigator.pushNamed('/login');
       } else {
-        showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: Text(translations['loginRequired'] ?? 'Login Required'),
-              content: Text(translations['loginRequiredMessage'] ?? 'Please login to continue with this action.'),
-              actions: [
-                TextButton(
-                  child: Text(translations['cancel'] ?? 'Cancel'),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-                TextButton(
-                  child: Text(translations['login'] ?? 'Login'),
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    // Navigate to login page
-                    Navigator.pushNamed(context, '/login');
-                  },
-                ),
-              ],
-            );
-          },
-        );
+        Navigator.of(context).pushNamed('/login');
       }
       return false;
     }
+
     return true;
   }
 }

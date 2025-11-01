@@ -1,5 +1,6 @@
 import 'dart:io' show Platform;
 import 'package:auto_revop/pages/resetpassword_page.dart';
+import 'package:auto_revop/pages/otpverification_page.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -76,13 +77,13 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
           ScaffoldMessenger.of(context).showSnackBar(snackBar);
 
-          // Navigate immediately to reset password page
+          // Navigate immediately to OTP verification page first
           Future.delayed(const Duration(seconds: 1), () {
             if (mounted) {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const ResetPasswordPage(),
+                  builder: (context) => const OtpPage(),
                 ),
               );
             }
@@ -198,7 +199,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   Widget build(BuildContext context) {
     return Platform.isIOS
         ? CupertinoPageScaffold(
-            backgroundColor: CupertinoColors.systemBackground,
+            backgroundColor: Colors.white,
             child: SafeArea(
               child: Padding(
                 padding: const EdgeInsets.all(20.0),
@@ -250,6 +251,14 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                     CupertinoTextField(
                       controller: emailController,
                       placeholder: "Email",
+                      placeholderStyle: TextStyle(color: Colors.black),
+                      style: TextStyle(color: Colors.black),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        border: Border(
+                          bottom: BorderSide(color: Colors.black, width: 1.0),
+                        ),
+                      ),
                       padding: EdgeInsets.all(16.0),
                       keyboardType: TextInputType.emailAddress,
                     ),
@@ -308,11 +317,29 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                     // 📧 Email Input
                     TextField(
                       controller: emailController,
+                      style: TextStyle(color: Colors.black),
                       decoration: InputDecoration(
-                        labelText: "Email",
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                        labelText: 'Email',
+                        labelStyle: TextStyle(color: Colors.black),
+                        prefixIcon: Icon(
+                          CupertinoIcons.mail,
+                          color: Colors.grey,
                         ),
+                        border: UnderlineInputBorder(
+                          borderSide: BorderSide(color: Colors.black),
+                        ),
+                        enabledBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(color: Colors.black),
+                        ),
+                        focusedBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(
+                            color: Color.fromRGBO(17, 131, 192, 1),
+                            width: 2.0,
+                          ),
+                        ),
+                        contentPadding: EdgeInsets.all(16.0),
+                        fillColor: Colors.white,
+                        filled: true,
                       ),
                       keyboardType: TextInputType.emailAddress,
                     ),

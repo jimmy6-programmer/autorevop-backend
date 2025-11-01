@@ -6,16 +6,15 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
+import 'package:provider/provider.dart';
 import '../utils/api_utils.dart'; // For getApiBaseUrl
 import '../utils/auth_utils.dart'; // For authentication
 import '../models/service_model.dart';
+import '../providers/translation_provider.dart';
 import 'success_page.dart';
-import 'translations.dart';
 
 class MechanicsPage extends StatefulWidget {
-  final Map<String, String> translations;
-
-  const MechanicsPage({super.key, required this.translations});
+  const MechanicsPage({super.key});
 
   @override
   _MechanicsPageState createState() => _MechanicsPageState();
@@ -163,7 +162,8 @@ class _MechanicsPageState extends State<MechanicsPage> {
         final symbol = _currencies[_selectedCurrency]!['symbol'] as String;
         _totalPrice = '$symbol${convertedPrice.toStringAsFixed(2)}';
       } else {
-        _totalPrice = widget.translations['toBeDiscussed'] ?? 'To be discussed';
+        final localeProvider = Provider.of<LocaleProvider>(context);
+        _totalPrice = localeProvider.translate('toBeDiscussed');
       }
     });
   }
@@ -327,7 +327,14 @@ class _MechanicsPageState extends State<MechanicsPage> {
                     selectedIndex = index;
                   },
                   children: options
-                      .map((option) => Center(child: Text(option)))
+                      .map(
+                        (option) => Center(
+                          child: Text(
+                            option,
+                            style: TextStyle(color: Colors.black),
+                          ),
+                        ),
+                      )
                       .toList(),
                 ),
               ),
@@ -340,7 +347,11 @@ class _MechanicsPageState extends State<MechanicsPage> {
 
   Future<void> _submitBooking() async {
     // Check authentication before proceeding
-    final isAuthenticated = await AuthUtils.checkAuthAndRedirect(context, widget.translations);
+    // Using easy_localization directly
+    final isAuthenticated = await AuthUtils.checkAuthAndRedirect(
+      context,
+      {}, // No longer need translations map
+    );
     if (!isAuthenticated) return;
 
     print('🔄 Starting booking submission...');
@@ -357,6 +368,9 @@ class _MechanicsPageState extends State<MechanicsPage> {
       'location': _locationController.text,
       'totalPrice': _totalPrice,
       'currency': _selectedCurrency,
+      'customIssue': _selectedService?.name == 'Other'
+          ? _customIssueController.text
+          : null,
     };
 
     print('📋 Booking data to send: ${json.encode(bookingData)}');
@@ -463,17 +477,20 @@ class _MechanicsPageState extends State<MechanicsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final localeProvider = Provider.of<LocaleProvider>(context);
+
     return Platform.isIOS
         ? CupertinoPageScaffold(
+            backgroundColor: Colors.white,
             navigationBar: CupertinoNavigationBar(
+              backgroundColor: Colors.white,
               transitionBetweenRoutes: false,
               middle: Text(
-                widget.translations['mechanicServiceBooking'] ??
-                    'Book Mechanic Service',
+                localeProvider.translate('mechanicServiceBooking'),
                 style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: CupertinoColors.label,
+                  color: Colors.black,
                 ),
               ),
             ),
@@ -485,7 +502,7 @@ class _MechanicsPageState extends State<MechanicsPage> {
                   children: [
                     const SizedBox(height: 24),
                     Text(
-                      widget.translations['fullName'] ?? 'Full Name',
+                      localeProvider.translate('fullName'),
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -495,15 +512,21 @@ class _MechanicsPageState extends State<MechanicsPage> {
                     const SizedBox(height: 8),
                     CupertinoTextField(
                       controller: _fullNameController,
-                      placeholder:
-                          widget.translations['namePlaceholder'] ??
-                          'Enter your full name',
+                      placeholder: localeProvider.translate('namePlaceholder'),
+                      placeholderStyle: TextStyle(color: Colors.grey),
+                      style: TextStyle(color: Colors.black),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        border: Border(
+                          bottom: BorderSide(color: Colors.black, width: 1.0),
+                        ),
+                      ),
                       padding: EdgeInsets.all(16.0),
                       onChanged: (value) => _updateForm(),
                     ),
                     const SizedBox(height: 24),
                     Text(
-                      widget.translations['phoneNumber'] ?? 'Phone Number',
+                      localeProvider.translate('phoneNumber'),
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -513,16 +536,22 @@ class _MechanicsPageState extends State<MechanicsPage> {
                     const SizedBox(height: 8),
                     CupertinoTextField(
                       controller: _phoneNumberController,
-                      placeholder:
-                          widget.translations['phonePlaceholder'] ??
-                          'Enter phone number with country code (e.g., +250)',
+                      placeholder: localeProvider.translate('phonePlaceholder'),
+                      placeholderStyle: TextStyle(color: Colors.grey),
+                      style: TextStyle(color: Colors.black),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        border: Border(
+                          bottom: BorderSide(color: Colors.black, width: 1.0),
+                        ),
+                      ),
                       padding: EdgeInsets.all(16.0),
                       keyboardType: TextInputType.phone,
                       onChanged: (value) => _updateForm(),
                     ),
                     const SizedBox(height: 24),
                     Text(
-                      widget.translations['vehicleBrand'] ?? 'Vehicle Brand',
+                      localeProvider.translate('vehicleBrand'),
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -561,13 +590,11 @@ class _MechanicsPageState extends State<MechanicsPage> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              _selectedVehicleBrand ??
-                                  (widget.translations['selectVehicleBrand'] ??
-                                      'Select Vehicle Brand'),
+                              _selectedVehicleBrand ?? localeProvider.translate('vehicleBrand'),
                               style: TextStyle(
                                 color: _selectedVehicleBrand != null
-                                    ? CupertinoColors.label
-                                    : CupertinoColors.secondaryLabel,
+                                    ? Colors.black
+                                    : Colors.grey,
                                 fontSize: 16,
                               ),
                             ),
@@ -582,7 +609,7 @@ class _MechanicsPageState extends State<MechanicsPage> {
                     ),
                     const SizedBox(height: 24),
                     Text(
-                      widget.translations['selectIssue'] ?? 'Select Issue',
+                      localeProvider.translate('selectIssue'),
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -595,19 +622,37 @@ class _MechanicsPageState extends State<MechanicsPage> {
                         : GestureDetector(
                             onTap: () => _showCupertinoPicker(
                               context,
-                              _mechanicServices
-                                  .map((service) => service.name)
-                                  .toList(),
+                              [
+                                ..._mechanicServices
+                                    .map((service) => service.name)
+                                    .toList(),
+                                'Other',
+                              ],
                               _selectedService?.name,
                               (value) {
                                 if (value != null) {
-                                  final service = _mechanicServices.firstWhere(
-                                    (s) => s.name == value,
-                                  );
-                                  setState(() {
-                                    _selectedService = service;
-                                    _updateTotalPrice();
-                                  });
+                                  if (value == 'Other') {
+                                    setState(() {
+                                      _selectedService = Service(
+                                        id: 'other',
+                                        name: 'Other',
+                                        type: 'mechanic',
+                                        price: 0.0,
+                                        currency: 'USD',
+                                        isActive: true,
+                                        createdAt: '',
+                                        updatedAt: '',
+                                      );
+                                      _updateTotalPrice();
+                                    });
+                                  } else {
+                                    final service = _mechanicServices
+                                        .firstWhere((s) => s.name == value);
+                                    setState(() {
+                                      _selectedService = service;
+                                      _updateTotalPrice();
+                                    });
+                                  }
                                 }
                               },
                             ),
@@ -631,13 +676,11 @@ class _MechanicsPageState extends State<MechanicsPage> {
                                     MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
-                                    _selectedService?.name ??
-                                        (widget.translations['selectService'] ??
-                                            'Select Service'),
+                                    _selectedService?.name ?? localeProvider.translate('selectIssue'),
                                     style: TextStyle(
                                       color: _selectedService != null
-                                          ? CupertinoColors.label
-                                          : CupertinoColors.secondaryLabel,
+                                          ? Colors.black
+                                          : Colors.grey,
                                       fontSize: 16,
                                     ),
                                   ),
@@ -652,8 +695,7 @@ class _MechanicsPageState extends State<MechanicsPage> {
                           ),
                     const SizedBox(height: 24),
                     Text(
-                      widget.translations['locationPlaceholder'] ??
-                          'Enter your location for service',
+                      localeProvider.translate('locationPlaceholder'),
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -663,81 +705,50 @@ class _MechanicsPageState extends State<MechanicsPage> {
                     const SizedBox(height: 8),
                     CupertinoTextField(
                       controller: _locationController,
-                      placeholder:
-                          widget.translations['locationPlaceholder'] ??
-                          'Enter your location for service',
+                      placeholder: localeProvider.translate('locationPlaceholder'),
+                      placeholderStyle: TextStyle(color: Colors.grey),
+                      style: TextStyle(color: Colors.black),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        border: Border(
+                          bottom: BorderSide(color: Colors.black, width: 1.0),
+                        ),
+                      ),
                       padding: EdgeInsets.all(16.0),
                       onChanged: (value) => _updateForm(),
                     ),
                     const SizedBox(height: 24),
-                    Text(
-                      widget.translations['selectCurrency'] ??
-                          'Select Currency',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: CupertinoColors.label,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    GestureDetector(
-                      onTap: () => _showCupertinoPicker(
-                        context,
-                        _currencies.keys.toList(),
-                        _selectedCurrency,
-                        (value) {
-                          setState(() {
-                            _selectedCurrency = value!;
-                            _updateTotalPrice();
-                          });
-                        },
-                      ),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 16,
+                    // Custom Issue Field - only show if "Other" is selected
+                    if (_selectedService?.name == 'Other') ...[
+                      Text(
+                        'Specify your issue',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: CupertinoColors.label,
                         ),
+                      ),
+                      const SizedBox(height: 8),
+                      CupertinoTextField(
+                        controller: _customIssueController,
+                        placeholder: 'Describe your specific issue',
+                        placeholderStyle: TextStyle(color: Colors.grey),
+                        style: TextStyle(color: Colors.black),
                         decoration: BoxDecoration(
+                          color: Colors.white,
                           border: Border(
-                            bottom: BorderSide(
-                              color: CupertinoColors.activeBlue,
-                              width: 2,
-                            ),
+                            bottom: BorderSide(color: Colors.black, width: 1.0),
                           ),
                         ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              _selectedCurrency,
-                              style: const TextStyle(
-                                color: CupertinoColors.label,
-                                fontSize: 16,
-                              ),
-                            ),
-                            Icon(
-                              CupertinoIcons.chevron_down,
-                              color: CupertinoColors.inactiveGray,
-                              size: 20,
-                            ),
-                          ],
-                        ),
+                        padding: EdgeInsets.all(16.0),
+                        onChanged: (value) => _updateForm(),
                       ),
-                    ),
-                    const SizedBox(height: 24),
-                    Text(
-                      '${widget.translations['totalPrice'] ?? 'Total Price'}: $_totalPrice',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: CupertinoColors.label,
-                      ),
-                    ),
+                      const SizedBox(height: 24),
+                    ],
                     const SizedBox(height: 24),
                     Center(
                       child: adaptiveButton(
-                        widget.translations['submitBooking'] ??
-                            'Submit Booking',
+                        localeProvider.translate('submitBooking'),
                         _isFormValid ? _submitBooking : null,
                       ),
                     ),
@@ -750,8 +761,7 @@ class _MechanicsPageState extends State<MechanicsPage> {
         : Scaffold(
             appBar: AppBar(
               title: Text(
-                widget.translations['mechanicServiceBooking'] ??
-                    'Book Mechanic Service',
+                localeProvider.translate('mechanicServiceBooking'),
                 style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -769,7 +779,7 @@ class _MechanicsPageState extends State<MechanicsPage> {
                 children: [
                   const SizedBox(height: 24),
                   Text(
-                    widget.translations['fullName'] ?? 'Full Name',
+                    localeProvider.translate('fullName'),
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -780,9 +790,7 @@ class _MechanicsPageState extends State<MechanicsPage> {
                   TextField(
                     controller: _fullNameController,
                     decoration: InputDecoration(
-                      hintText:
-                          widget.translations['namePlaceholder'] ??
-                          'Enter your full name',
+                      hintText: localeProvider.translate('namePlaceholder'),
                       border: const UnderlineInputBorder(),
                       enabledBorder: const UnderlineInputBorder(
                         borderSide: BorderSide(color: Colors.grey),
@@ -797,7 +805,7 @@ class _MechanicsPageState extends State<MechanicsPage> {
                   ),
                   const SizedBox(height: 24),
                   Text(
-                    widget.translations['phoneNumber'] ?? 'Phone Number',
+                    localeProvider.translate('phoneNumber'),
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -808,9 +816,7 @@ class _MechanicsPageState extends State<MechanicsPage> {
                   TextField(
                     controller: _phoneNumberController,
                     decoration: InputDecoration(
-                      hintText:
-                          widget.translations['phonePlaceholder'] ??
-                          'Enter phone number with country code (e.g., +250)',
+                      hintText: localeProvider.translate('phonePlaceholder'),
                       border: const UnderlineInputBorder(),
                       enabledBorder: const UnderlineInputBorder(
                         borderSide: BorderSide(color: Colors.grey),
@@ -826,7 +832,7 @@ class _MechanicsPageState extends State<MechanicsPage> {
                   ),
                   const SizedBox(height: 24),
                   Text(
-                    widget.translations['vehicleBrand'] ?? 'Vehicle Brand',
+                    localeProvider.translate('vehicleBrand'),
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -865,9 +871,7 @@ class _MechanicsPageState extends State<MechanicsPage> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            _selectedVehicleBrand ??
-                                (widget.translations['selectVehicleBrand'] ??
-                                    'Select Vehicle Brand'),
+                            _selectedVehicleBrand ?? localeProvider.translate('vehicleBrand'),
                             style: TextStyle(
                               color: _selectedVehicleBrand != null
                                   ? Colors.black87
@@ -886,7 +890,7 @@ class _MechanicsPageState extends State<MechanicsPage> {
                   ),
                   const SizedBox(height: 24),
                   Text(
-                    widget.translations['selectIssue'] ?? 'Select Issue',
+                    localeProvider.translate('selectIssue'),
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -899,19 +903,38 @@ class _MechanicsPageState extends State<MechanicsPage> {
                       : GestureDetector(
                           onTap: () => _showCupertinoPicker(
                             context,
-                            _mechanicServices
-                                .map((service) => service.name)
-                                .toList(),
+                            [
+                              ..._mechanicServices
+                                  .map((service) => service.name)
+                                  .toList(),
+                              'Other',
+                            ],
                             _selectedService?.name,
                             (value) {
                               if (value != null) {
-                                final service = _mechanicServices.firstWhere(
-                                  (s) => s.name == value,
-                                );
-                                setState(() {
-                                  _selectedService = service;
-                                  _updateTotalPrice();
-                                });
+                                if (value == 'Other') {
+                                  setState(() {
+                                    _selectedService = Service(
+                                      id: 'other',
+                                      name: 'Other',
+                                      type: 'mechanic',
+                                      price: 0.0,
+                                      currency: 'USD',
+                                      isActive: true,
+                                      createdAt: '',
+                                      updatedAt: '',
+                                    );
+                                    _updateTotalPrice();
+                                  });
+                                } else {
+                                  final service = _mechanicServices.firstWhere(
+                                    (s) => s.name == value,
+                                  );
+                                  setState(() {
+                                    _selectedService = service;
+                                    _updateTotalPrice();
+                                  });
+                                }
                               }
                             },
                           ),
@@ -934,9 +957,7 @@ class _MechanicsPageState extends State<MechanicsPage> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                  _selectedService?.name ??
-                                      (widget.translations['selectService'] ??
-                                          'Select Service'),
+                                  _selectedService?.name ?? localeProvider.translate('selectIssue'),
                                   style: TextStyle(
                                     color: _selectedService != null
                                         ? Colors.black87
@@ -955,8 +976,7 @@ class _MechanicsPageState extends State<MechanicsPage> {
                         ),
                   const SizedBox(height: 24),
                   Text(
-                    widget.translations['locationPlaceholder'] ??
-                        'Enter your location for service',
+                    localeProvider.translate('locationPlaceholder'),
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -967,9 +987,7 @@ class _MechanicsPageState extends State<MechanicsPage> {
                   TextField(
                     controller: _locationController,
                     decoration: InputDecoration(
-                      hintText:
-                          widget.translations['locationPlaceholder'] ??
-                          'Enter your location for service',
+                      hintText: localeProvider.translate('locationPlaceholder'),
                       border: const UnderlineInputBorder(),
                       enabledBorder: const UnderlineInputBorder(
                         borderSide: BorderSide(color: Colors.grey),
@@ -983,69 +1001,39 @@ class _MechanicsPageState extends State<MechanicsPage> {
                     onChanged: (value) => _updateForm(),
                   ),
                   const SizedBox(height: 24),
-                  Text(
-                    widget.translations['selectCurrency'] ?? 'Select Currency',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  GestureDetector(
-                    onTap: () => _showCupertinoPicker(
-                      context,
-                      _currencies.keys.toList(),
-                      _selectedCurrency,
-                      (value) {
-                        setState(() {
-                          _selectedCurrency = value!;
-                          _updateTotalPrice();
-                        });
-                      },
-                    ),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 16,
+                  // Custom Issue Field - only show if "Other" is selected
+                  if (_selectedService?.name == 'Other') ...[
+                    Text(
+                      'Specify your issue',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
                       ),
-                      decoration: BoxDecoration(
-                        border: Border(
-                          bottom: BorderSide(color: Colors.blue, width: 2),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: _customIssueController,
+                      decoration: InputDecoration(
+                        hintText: 'Describe your specific issue',
+                        border: const UnderlineInputBorder(),
+                        enabledBorder: const UnderlineInputBorder(
+                          borderSide: BorderSide(color: Colors.grey),
                         ),
+                        focusedBorder: const UnderlineInputBorder(
+                          borderSide: BorderSide(color: Colors.blue, width: 2),
+                        ),
+                        filled: true,
+                        fillColor: Colors.white,
                       ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            _selectedCurrency,
-                            style: const TextStyle(
-                              color: Colors.black87,
-                              fontSize: 16,
-                            ),
-                          ),
-                          Icon(
-                            CupertinoIcons.chevron_down,
-                            color: Colors.grey,
-                            size: 20,
-                          ),
-                        ],
-                      ),
+                      onChanged: (value) => _updateForm(),
                     ),
-                  ),
-                  const SizedBox(height: 24),
-                  Text(
-                    '${widget.translations['totalPrice'] ?? 'Total Price'}: $_totalPrice',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
+                    const SizedBox(height: 24),
+                  ],
                   const SizedBox(height: 24),
                   Center(
                     child: adaptiveButton(
-                      widget.translations['submitBooking'] ?? 'Submit Booking',
+                      localeProvider.translate('submitBooking'),
                       _isFormValid ? _submitBooking : null,
                     ),
                   ),
