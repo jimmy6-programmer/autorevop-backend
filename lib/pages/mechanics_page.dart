@@ -391,6 +391,16 @@ class _MechanicsPageState extends State<MechanicsPage> {
 
       if (response.statusCode == 201) {
         print('✅ Booking successful!');
+        // Clear form fields
+        _fullNameController.clear();
+        _phoneNumberController.clear();
+        _locationController.clear();
+        _customIssueController.clear();
+        setState(() {
+          _selectedService = null;
+          _selectedVehicleBrand = null;
+          _totalPrice = '';
+        });
         // Navigate to success page
         Navigator.push(
           context,

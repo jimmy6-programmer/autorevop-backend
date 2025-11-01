@@ -599,6 +599,17 @@ class _BookingsPageState extends State<BookingsPage> {
 
       if (response.statusCode == 201) {
         print('✅ Towing booking successful!');
+        // Clear form fields
+        _fullNameController.clear();
+        _phoneNumberController.clear();
+        _pickupLocationController.clear();
+        _carPlateNumberController.clear();
+        setState(() {
+          _selectedService = null;
+          _selectedVehicleMake = null;
+          _selectedVehicleModel = null;
+          _totalPrice = '';
+        });
         // Navigate to success page
         Navigator.push(
           context,
