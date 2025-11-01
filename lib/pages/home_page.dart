@@ -398,7 +398,7 @@ class _HomePageState extends State<HomePage> {
               ),
               const SizedBox(height: 12),
               Container(
-                height: 140, // Increased height for better visibility
+                height: 160, // Further increased height for complete visibility
                 child: ListView(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 16),

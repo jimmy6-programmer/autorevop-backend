@@ -320,6 +320,8 @@ class _DetailingPageState extends State<DetailingPage> {
                           CupertinoTextField(
                             controller: _phoneController,
                             placeholder: 'Enter your phone number',
+                            placeholderStyle: TextStyle(color: CupertinoColors.black), // Black placeholder
+                            style: TextStyle(color: CupertinoColors.black), // Black input text
                             keyboardType: TextInputType.phone,
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
@@ -363,8 +365,8 @@ class _DetailingPageState extends State<DetailingPage> {
                                     _selectedVehicleType ?? 'Select vehicle type',
                                     style: TextStyle(
                                       color: _selectedVehicleType != null
-                                          ? CupertinoColors.label
-                                          : CupertinoColors.secondaryLabel,
+                                          ? CupertinoColors.black // Black text for selected
+                                          : CupertinoColors.black.withOpacity(0.6), // Black placeholder
                                     ),
                                   ),
                                   Icon(
@@ -410,8 +412,8 @@ class _DetailingPageState extends State<DetailingPage> {
                                     _selectedServiceType ?? 'Select service type',
                                     style: TextStyle(
                                       color: _selectedServiceType != null
-                                          ? CupertinoColors.label
-                                          : CupertinoColors.secondaryLabel,
+                                          ? CupertinoColors.black // Black text for selected
+                                          : CupertinoColors.black.withOpacity(0.6), // Black placeholder
                                     ),
                                   ),
                                   Icon(
@@ -435,6 +437,8 @@ class _DetailingPageState extends State<DetailingPage> {
                           CupertinoTextField(
                             controller: _locationController,
                             placeholder: 'Enter service location',
+                            placeholderStyle: TextStyle(color: CupertinoColors.black), // Black placeholder
+                            style: TextStyle(color: CupertinoColors.black), // Black input text
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
                               color: CupertinoColors.white, // White background for dark mode
@@ -527,8 +531,10 @@ class _DetailingPageState extends State<DetailingPage> {
                           const SizedBox(height: 8),
                           TextField(
                             controller: _phoneController,
+                            style: TextStyle(color: Colors.black), // Black input text
                             decoration: InputDecoration(
                               hintText: 'Enter your phone number',
+                              hintStyle: TextStyle(color: Colors.black.withOpacity(0.6)), // Black placeholder
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
                                 borderSide: BorderSide(color: Colors.grey.shade300),
@@ -558,8 +564,10 @@ class _DetailingPageState extends State<DetailingPage> {
                           const SizedBox(height: 8),
                           DropdownButtonFormField<String>(
                             value: _selectedVehicleType,
+                            style: TextStyle(color: Colors.black), // Black text for selected value
                             decoration: InputDecoration(
                               hintText: 'Select vehicle type',
+                              hintStyle: TextStyle(color: Colors.black.withOpacity(0.6)), // Black placeholder
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
                                 borderSide: BorderSide(color: Colors.grey.shade300),
@@ -578,7 +586,7 @@ class _DetailingPageState extends State<DetailingPage> {
                             items: _vehicleTypes.map((type) {
                               return DropdownMenuItem<String>(
                                 value: type,
-                                child: Text(type),
+                                child: Text(type, style: TextStyle(color: Colors.black)), // Black dropdown text
                               );
                             }).toList(),
                             onChanged: (value) {
@@ -599,8 +607,10 @@ class _DetailingPageState extends State<DetailingPage> {
                           const SizedBox(height: 8),
                           DropdownButtonFormField<String>(
                             value: _selectedServiceType,
+                            style: TextStyle(color: Colors.black), // Black text for selected value
                             decoration: InputDecoration(
                               hintText: 'Select service type',
+                              hintStyle: TextStyle(color: Colors.black.withOpacity(0.6)), // Black placeholder
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
                                 borderSide: BorderSide(color: Colors.grey.shade300),
@@ -619,7 +629,7 @@ class _DetailingPageState extends State<DetailingPage> {
                             items: _serviceTypes.map((type) {
                               return DropdownMenuItem<String>(
                                 value: type,
-                                child: Text(type),
+                                child: Text(type, style: TextStyle(color: Colors.black)), // Black dropdown text
                               );
                             }).toList(),
                             onChanged: (value) {
@@ -640,8 +650,10 @@ class _DetailingPageState extends State<DetailingPage> {
                           const SizedBox(height: 8),
                           TextField(
                             controller: _locationController,
+                            style: TextStyle(color: Colors.black), // Black input text
                             decoration: InputDecoration(
                               hintText: 'Enter service location',
+                              hintStyle: TextStyle(color: Colors.black.withOpacity(0.6)), // Black placeholder
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
                                 borderSide: BorderSide(color: Colors.grey.shade300),
