@@ -320,7 +320,7 @@ class _DetailingPageState extends State<DetailingPage> {
                           CupertinoTextField(
                             controller: _phoneController,
                             placeholder: 'Enter your phone number',
-                            placeholderStyle: TextStyle(color: CupertinoColors.black), // Black placeholder
+                            placeholderStyle: TextStyle(color: CupertinoColors.systemGrey), // Black placeholder
                             style: TextStyle(color: CupertinoColors.black), // Black input text
                             keyboardType: TextInputType.phone,
                             padding: const EdgeInsets.all(16),
@@ -437,7 +437,7 @@ class _DetailingPageState extends State<DetailingPage> {
                           CupertinoTextField(
                             controller: _locationController,
                             placeholder: 'Enter service location',
-                            placeholderStyle: TextStyle(color: CupertinoColors.black), // Black placeholder
+                            placeholderStyle: TextStyle(color: CupertinoColors.systemGrey), // Black placeholder
                             style: TextStyle(color: CupertinoColors.black), // Black input text
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
@@ -449,7 +449,7 @@ class _DetailingPageState extends State<DetailingPage> {
                           const SizedBox(height: 30),
                           Center(
                             child: adaptiveButton(
-                              'Request Detailing Service',
+                              'Request Service',
                               _isFormValid ? _submitDetailingRequest : null,
                             ),
                           ),
