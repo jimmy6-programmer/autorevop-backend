@@ -8,6 +8,7 @@ import 'mechanics_page.dart';
 import 'spare_parts_page.dart';
 import 'bookings_page.dart';
 import 'profile_page.dart';
+import 'detailing_page.dart';
 import '../providers/translation_provider.dart';
 
 class HomePage extends StatefulWidget {
@@ -377,7 +378,7 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
               const SizedBox(height: 20), // Add spacing after category cards
-              const SizedBox(height: 12),
+              const SizedBox(height: 20), // Extra spacing for better layout
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
@@ -525,7 +526,13 @@ class _HomePageState extends State<HomePage> {
                       subtitle: 'Professional car cleaning & detailing services',
                       color: const Color(0xFF2196F3),
                       onTap: () {
-                        Navigator.of(context).pushNamed('/detailing');
+                        if (Platform.isIOS) {
+                          Navigator.of(context).push(
+                            CupertinoPageRoute(builder: (context) => const DetailingPage()),
+                          );
+                        } else {
+                          Navigator.of(context).pushNamed('/detailing');
+                        }
                       },
                     ),
                   ),
