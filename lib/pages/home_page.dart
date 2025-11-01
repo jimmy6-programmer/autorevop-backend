@@ -397,11 +397,12 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               const SizedBox(height: 12),
-              SizedBox(
-                height: 120,
+              Container(
+                height: 140, // Increased height for better visibility
                 child: ListView(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
+                  physics: const BouncingScrollPhysics(), // Better scrolling physics
                   children: [
                     _buildSparePartCard(
                       nameKey: 'engineOil',

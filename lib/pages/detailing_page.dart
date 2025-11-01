@@ -21,6 +21,7 @@ class _DetailingPageState extends State<DetailingPage> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _locationController = TextEditingController();
   String? _selectedVehicleType;
+  String? _selectedServiceType;
 
   final List<String> _vehicleTypes = [
     'Small Car (Sedan/Hatchback)',
@@ -29,6 +30,12 @@ class _DetailingPageState extends State<DetailingPage> {
     'Van/Minivan',
     'Motorcycle',
     'Other'
+  ];
+
+  final List<String> _serviceTypes = [
+    'Exterior Cleaning',
+    'Interior Cleaning',
+    'General Cleaning'
   ];
 
   @override
@@ -41,7 +48,8 @@ class _DetailingPageState extends State<DetailingPage> {
   bool get _isFormValid {
     return _phoneController.text.trim().isNotEmpty &&
            _locationController.text.trim().isNotEmpty &&
-           _selectedVehicleType != null;
+           _selectedVehicleType != null &&
+           _selectedServiceType != null;
   }
 
   Future<void> _submitDetailingRequest() async {
@@ -56,6 +64,7 @@ class _DetailingPageState extends State<DetailingPage> {
       'type': 'detailing',
       'phoneNumber': _phoneController.text,
       'vehicleType': _selectedVehicleType,
+      'serviceType': _selectedServiceType,
       'location': _locationController.text,
     };
 
@@ -73,6 +82,7 @@ class _DetailingPageState extends State<DetailingPage> {
         _locationController.clear();
         setState(() {
           _selectedVehicleType = null;
+          _selectedServiceType = null;
         });
 
         if (Platform.isIOS) {
@@ -313,8 +323,9 @@ class _DetailingPageState extends State<DetailingPage> {
                             keyboardType: TextInputType.phone,
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
-                              color: CupertinoColors.systemGrey6,
+                              color: CupertinoColors.white, // White background for dark mode
                               borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: CupertinoColors.systemGrey4),
                             ),
                           ),
                           const SizedBox(height: 20),
@@ -341,8 +352,9 @@ class _DetailingPageState extends State<DetailingPage> {
                             child: Container(
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: CupertinoColors.systemGrey6,
+                                color: CupertinoColors.white, // White background for dark mode
                                 borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: CupertinoColors.systemGrey4),
                               ),
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -351,6 +363,53 @@ class _DetailingPageState extends State<DetailingPage> {
                                     _selectedVehicleType ?? 'Select vehicle type',
                                     style: TextStyle(
                                       color: _selectedVehicleType != null
+                                          ? CupertinoColors.label
+                                          : CupertinoColors.secondaryLabel,
+                                    ),
+                                  ),
+                                  Icon(
+                                    CupertinoIcons.chevron_down,
+                                    color: CupertinoColors.systemGrey,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          Text(
+                            'Service Type',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              color: CupertinoColors.label,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          GestureDetector(
+                            onTap: () => _showCupertinoPicker(
+                              context,
+                              _serviceTypes,
+                              _selectedServiceType,
+                              (value) {
+                                setState(() {
+                                  _selectedServiceType = value;
+                                });
+                              },
+                            ),
+                            child: Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: CupertinoColors.white, // White background for dark mode
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: CupertinoColors.systemGrey4),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    _selectedServiceType ?? 'Select service type',
+                                    style: TextStyle(
+                                      color: _selectedServiceType != null
                                           ? CupertinoColors.label
                                           : CupertinoColors.secondaryLabel,
                                     ),
@@ -378,8 +437,9 @@ class _DetailingPageState extends State<DetailingPage> {
                             placeholder: 'Enter service location',
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
-                              color: CupertinoColors.systemGrey6,
+                              color: CupertinoColors.white, // White background for dark mode
                               borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: CupertinoColors.systemGrey4),
                             ),
                           ),
                           const SizedBox(height: 30),
@@ -482,7 +542,7 @@ class _DetailingPageState extends State<DetailingPage> {
                                 borderSide: BorderSide(color: Colors.blue, width: 2),
                               ),
                               filled: true,
-                              fillColor: Colors.grey.shade50,
+                              fillColor: Colors.white, // White background for dark mode
                             ),
                             keyboardType: TextInputType.phone,
                           ),
@@ -513,7 +573,7 @@ class _DetailingPageState extends State<DetailingPage> {
                                 borderSide: BorderSide(color: Colors.blue, width: 2),
                               ),
                               filled: true,
-                              fillColor: Colors.grey.shade50,
+                              fillColor: Colors.white, // White background for dark mode
                             ),
                             items: _vehicleTypes.map((type) {
                               return DropdownMenuItem<String>(
@@ -524,6 +584,47 @@ class _DetailingPageState extends State<DetailingPage> {
                             onChanged: (value) {
                               setState(() {
                                 _selectedVehicleType = value;
+                              });
+                            },
+                          ),
+                          const SizedBox(height: 20),
+                          Text(
+                            'Service Type',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          DropdownButtonFormField<String>(
+                            value: _selectedServiceType,
+                            decoration: InputDecoration(
+                              hintText: 'Select service type',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: BorderSide(color: Colors.grey.shade300),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: BorderSide(color: Colors.grey.shade300),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: BorderSide(color: Colors.blue, width: 2),
+                              ),
+                              filled: true,
+                              fillColor: Colors.white, // White background for dark mode
+                            ),
+                            items: _serviceTypes.map((type) {
+                              return DropdownMenuItem<String>(
+                                value: type,
+                                child: Text(type),
+                              );
+                            }).toList(),
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedServiceType = value;
                               });
                             },
                           ),
@@ -554,7 +655,7 @@ class _DetailingPageState extends State<DetailingPage> {
                                 borderSide: BorderSide(color: Colors.blue, width: 2),
                               ),
                               filled: true,
-                              fillColor: Colors.grey.shade50,
+                              fillColor: Colors.white, // White background for dark mode
                             ),
                           ),
                           const SizedBox(height: 30),
