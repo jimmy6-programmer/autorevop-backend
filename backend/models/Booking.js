@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const bookingSchema = new mongoose.Schema({
   type: {
     type: String,
-    required: true, // 'mechanic' or 'towing'
+    required: true, // 'mechanic', 'towing', or 'detailing'
   },
   fullName: {
     type: String,
@@ -25,6 +25,10 @@ const bookingSchema = new mongoose.Schema({
     type: String,
     required: function() { return this.type === 'towing'; },
   },
+  vehicleType: {
+    type: String,
+    required: function() { return this.type === 'detailing'; },
+  },
   serviceId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Service',
@@ -36,7 +40,7 @@ const bookingSchema = new mongoose.Schema({
   },
   serviceType: {
     type: String,
-    required: false, // Not required since we now use serviceId
+    required: function() { return this.type === 'detailing'; }, // Required for detailing bookings
   },
   customIssue: {
     type: String,

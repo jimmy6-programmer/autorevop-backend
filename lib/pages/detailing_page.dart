@@ -27,9 +27,7 @@ class _DetailingPageState extends State<DetailingPage> {
     'Small Car (Sedan/Hatchback)',
     'SUV/Crossover',
     'Truck/Pickup',
-    'Van/Minivan',
-    'Motorcycle',
-    'Other'
+    'Van/Minivan'
   ];
 
   final List<String> _serviceTypes = [
@@ -40,6 +38,8 @@ class _DetailingPageState extends State<DetailingPage> {
 
   @override
   void dispose() {
+    _phoneController.removeListener(_updateButtonState);
+    _locationController.removeListener(_updateButtonState);
     _phoneController.dispose();
     _locationController.dispose();
     super.dispose();
@@ -52,6 +52,18 @@ class _DetailingPageState extends State<DetailingPage> {
            _selectedServiceType != null;
   }
 
+  @override
+  void initState() {
+    super.initState();
+    // Add listeners to update button state when form changes
+    _phoneController.addListener(_updateButtonState);
+    _locationController.addListener(_updateButtonState);
+  }
+
+  void _updateButtonState() {
+    setState(() {});
+  }
+
   Future<void> _submitDetailingRequest() async {
     // Check authentication before proceeding
     final isAuthenticated = await AuthUtils.checkAuthAndRedirect(
@@ -62,10 +74,13 @@ class _DetailingPageState extends State<DetailingPage> {
 
     final detailingData = {
       'type': 'detailing',
+      'fullName': 'Customer', // Add a default name since detailing doesn't require name
       'phoneNumber': _phoneController.text,
       'vehicleType': _selectedVehicleType,
       'serviceType': _selectedServiceType,
       'location': _locationController.text,
+      'totalPrice': '0', // Default price for detailing
+      'currency': 'USD',
     };
 
     try {
@@ -327,7 +342,7 @@ class _DetailingPageState extends State<DetailingPage> {
                             decoration: BoxDecoration(
                               color: CupertinoColors.white, // White background for dark mode
                               borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: CupertinoColors.systemGrey4),
+                              border: Border.all(color: CupertinoColors.systemGrey),
                             ),
                           ),
                           const SizedBox(height: 20),
@@ -443,7 +458,7 @@ class _DetailingPageState extends State<DetailingPage> {
                             decoration: BoxDecoration(
                               color: CupertinoColors.white, // White background for dark mode
                               borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: CupertinoColors.systemGrey4),
+                              border: Border.all(color: CupertinoColors.systemGrey),
                             ),
                           ),
                           const SizedBox(height: 30),
@@ -451,6 +466,7 @@ class _DetailingPageState extends State<DetailingPage> {
                             child: adaptiveButton(
                               'Request Service',
                               _isFormValid ? _submitDetailingRequest : null,
+                              isEnabled: _isFormValid,
                             ),
                           ),
                         ],
@@ -675,6 +691,7 @@ class _DetailingPageState extends State<DetailingPage> {
                             child: adaptiveButton(
                               'Request Detailing Service',
                               _isFormValid ? _submitDetailingRequest : null,
+                              isEnabled: _isFormValid,
                             ),
                           ),
                         ],

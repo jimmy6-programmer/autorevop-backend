@@ -58,11 +58,13 @@ exports.createBooking = async (req, res) => {
     console.log('✅ Booking saved successfully:', booking._id);
 
     // Create notification for new booking
-    const serviceType = booking.type === 'mechanic' ? 'Mechanic Service' : 'Towing Service';
+    const serviceType = booking.type === 'mechanic' ? 'Mechanic Service' :
+                       booking.type === 'towing' ? 'Towing Service' :
+                       booking.type === 'detailing' ? 'Car Detailing Service' : 'Service';
     const notification = new Notification({
       type: 'info',
       title: `New ${serviceType} Booking`,
-      message: `${serviceType} booking ${booking._id} has been requested by ${booking.fullName}`,
+      message: `${serviceType} booking ${booking._id} has been requested by ${booking.fullName || 'a customer'}`,
       relatedId: booking._id,
       relatedType: 'booking',
     });
@@ -92,7 +94,9 @@ exports.updateBooking = async (req, res) => {
 
     // Create notification for booking status update
     if (req.body.status && oldBooking && req.body.status !== oldBooking.status) {
-      const serviceType = booking.type === 'mechanic' ? 'Mechanic Service' : 'Towing Service';
+      const serviceType = booking.type === 'mechanic' ? 'Mechanic Service' :
+                         booking.type === 'towing' ? 'Towing Service' :
+                         booking.type === 'detailing' ? 'Car Detailing Service' : 'Service';
       const notification = new Notification({
         type: 'success',
         title: `${serviceType} Booking Status Updated`,

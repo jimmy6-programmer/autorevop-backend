@@ -302,6 +302,7 @@ class _HomePageState extends State<HomePage> {
     return Consumer<LocaleProvider>(
       builder: (context, localeProvider, child) {
         return SingleChildScrollView(
+          physics: const BouncingScrollPhysics(), // Add smooth scrolling physics
           child: Column(
             children: [
               // Add top padding to push content below the header
@@ -378,7 +379,7 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
               const SizedBox(height: 20), // Add spacing after category cards
-              const SizedBox(height: 20), // Extra spacing for better layout
+              const SizedBox(height: 12), // Reset spacing for better layout
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
@@ -397,8 +398,8 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               const SizedBox(height: 12),
-              Container(
-                height: 260, // Significantly increased height (60% more than 160 = ~96px increase)
+              SizedBox(
+                height: 150, // Reset to reasonable height
                 child: ListView(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
