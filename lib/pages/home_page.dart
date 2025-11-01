@@ -483,33 +483,57 @@ class _HomePageState extends State<HomePage> {
       builder: (context, localeProvider, child) {
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
+          child: Column(
             children: [
-              Expanded(
-                child: _buildCategoryCard(
-                  icon: CupertinoIcons.car,
-                  title: localeProvider.translate('towingServicesTitle'),
-                  subtitle: localeProvider.translate('towingServicesSubtitle'),
-                  color: const Color(0xFFF57C00),
-                  onTap: () {
-                    if (Platform.isIOS) {
-                      Navigator.of(context).push(
-                        CupertinoPageRoute(builder: (context) => BookingsPage()),
-                      );
-                    } else {
-                      _onItemTapped(3);
-                    }
-                  },
-                ),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildCategoryCard(
+                      icon: CupertinoIcons.car,
+                      title: localeProvider.translate('towingServicesTitle'),
+                      subtitle: localeProvider.translate('towingServicesSubtitle'),
+                      color: const Color(0xFFF57C00),
+                      onTap: () {
+                        if (Platform.isIOS) {
+                          Navigator.of(context).push(
+                            CupertinoPageRoute(builder: (context) => BookingsPage()),
+                          );
+                        } else {
+                          _onItemTapped(3);
+                        }
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildCategoryCard(
+                      icon: CupertinoIcons.exclamationmark_shield,
+                      title: localeProvider.translate('emergencyHelpTitle'),
+                      subtitle: localeProvider.translate('emergencyHelpSubtitle'),
+                      color: const Color(0xFFD32F2F),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildCategoryCard(
-                  icon: CupertinoIcons.exclamationmark_shield,
-                  title: localeProvider.translate('emergencyHelpTitle'),
-                  subtitle: localeProvider.translate('emergencyHelpSubtitle'),
-                  color: const Color(0xFFD32F2F),
-                ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildCategoryCard(
+                      icon: CupertinoIcons.sparkles,
+                      title: 'Car Detailing',
+                      subtitle: 'Professional car cleaning & detailing services',
+                      color: const Color(0xFF2196F3),
+                      onTap: () {
+                        Navigator.of(context).pushNamed('/detailing');
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Container(), // Empty space for future services
+                  ),
+                ],
               ),
             ],
           ),

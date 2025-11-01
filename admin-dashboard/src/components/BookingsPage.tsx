@@ -13,7 +13,7 @@ import { toast } from 'sonner';
 
 interface Booking {
   _id: string;
-  type: 'mechanic' | 'towing';
+  type: 'mechanic' | 'towing' | 'detailing';
   fullName: string;
   phoneNumber: string;
   vehicleBrand?: string;
@@ -29,6 +29,7 @@ interface Booking {
   status: 'pending' | 'completed' | 'cancelled';
   createdAt?: string;
   updatedAt?: string;
+  vehicleType?: string; // For detailing services
   serviceId_populated?: {
     _id: string;
     name: string;
@@ -53,6 +54,7 @@ export default function BookingsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState('all');
   const [activeTab, setActiveTab] = useState('mechanic');
+  const [serviceTabs, setServiceTabs] = useState(['mechanic', 'towing', 'detailing']);
 
   useEffect(() => {
     fetchBookings();
@@ -171,16 +173,21 @@ export default function BookingsPage() {
   return (
     <>
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="mechanic">Mechanic Services</TabsTrigger>
           <TabsTrigger value="towing">Towing Services</TabsTrigger>
+          <TabsTrigger value="detailing">Detailing Services</TabsTrigger>
         </TabsList>
         <TabsContent value={activeTab} className="mt-6">
           <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm animate-in slide-in-from-bottom-4 fade-in">
             <CardHeader>
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
                 <CardTitle className="flex items-center space-x-2">
-                  <span className="text-xl font-bold">{activeTab === 'mechanic' ? 'Mechanic Bookings' : 'Towing Bookings'}</span>
+                  <span className="text-xl font-bold">
+                    {activeTab === 'mechanic' ? 'Mechanic Bookings' :
+                     activeTab === 'towing' ? 'Towing Bookings' :
+                     'Detailing Bookings'}
+                  </span>
                   <Badge variant="secondary" className="ml-2">
                     {filteredBookings.length}
                   </Badge>
@@ -226,8 +233,14 @@ export default function BookingsPage() {
                       <TableHead>Booking ID</TableHead>
                       <TableHead>Customer Name</TableHead>
                       <TableHead className="hidden md:table-cell">Phone</TableHead>
-                      <TableHead className="hidden lg:table-cell">Vehicle Brand</TableHead>
-                      <TableHead>{activeTab === 'mechanic' ? 'Issue' : 'Service Type'}</TableHead>
+                      <TableHead className="hidden lg:table-cell">
+                        {activeTab === 'detailing' ? 'Vehicle Type' : 'Vehicle Brand'}
+                      </TableHead>
+                      <TableHead>
+                        {activeTab === 'mechanic' ? 'Issue' :
+                         activeTab === 'towing' ? 'Service Type' :
+                         'Phone Number'}
+                      </TableHead>
                       <TableHead className="hidden sm:table-cell">Location</TableHead>
                       <TableHead className="hidden sm:table-cell">Status</TableHead>
                       <TableHead className="hidden xl:table-cell">Created Date</TableHead>
@@ -239,12 +252,21 @@ export default function BookingsPage() {
                       <TableRow key={booking._id} className="hover:bg-slate-50 transition-colors">
                         <TableCell className="font-medium">{booking._id}</TableCell>
                         <TableCell>{booking.fullName}</TableCell>
-                        <TableCell className="hidden md:table-cell">{booking.phoneNumber}</TableCell>
-                        <TableCell className="hidden lg:table-cell">{booking.vehicleBrand || '-'}</TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          {activeTab === 'detailing' ? booking.phoneNumber : booking.phoneNumber}
+                        </TableCell>
+                        <TableCell className="hidden lg:table-cell">
+                          {activeTab === 'detailing'
+                            ? (booking.vehicleType || '-')
+                            : (booking.vehicleBrand || '-')
+                          }
+                        </TableCell>
                         <TableCell>
                           {activeTab === 'mechanic'
                             ? (booking.issue || booking.serviceId_populated?.name || '-')
-                            : (booking.serviceType || booking.serviceId_populated?.name || '-')
+                            : activeTab === 'towing'
+                            ? (booking.serviceType || booking.serviceId_populated?.name || '-')
+                            : (booking.phoneNumber || '-')
                           }
                         </TableCell>
                         <TableCell className="hidden sm:table-cell">{booking.location}</TableCell>

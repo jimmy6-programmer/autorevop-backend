@@ -19,6 +19,7 @@ import 'pages/mechanics_page.dart';
 import 'pages/spare_parts_page.dart';
 import 'pages/bookings_page.dart';
 import 'pages/cart_page.dart';
+import 'pages/detailing_page.dart';
 import 'utils/auth_utils.dart';
 
 // API Base URL configuration
@@ -104,6 +105,9 @@ class MyApp extends StatelessWidget {
         break;
       case '/cart':
         page = const CartPage();
+        break;
+      case '/detailing':
+        page = const DetailingPage();
         break;
       default:
         page = const StartingPage();

@@ -43,7 +43,7 @@ const vehicleModels: Record<string, string[]> = {
 
 interface Booking {
   _id: string;
-  type: 'mechanic' | 'towing';
+  type: 'mechanic' | 'towing' | 'detailing';
   fullName: string;
   phoneNumber: string;
   vehicleBrand?: string;
