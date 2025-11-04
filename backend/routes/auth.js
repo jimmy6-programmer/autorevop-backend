@@ -159,6 +159,28 @@ router.get('/me', auth, async (req, res) => {
   }
 });
 
+// Delete account
+router.delete('/delete-account', auth, async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // Delete user from database
+    const user = await User.findByIdAndDelete(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Optionally delete related data (bookings, orders, etc.)
+    // await Booking.deleteMany({ userId });
+    // await Order.deleteMany({ userId });
+
+    res.json({ message: 'Account deleted successfully' });
+  } catch (err) {
+    console.error('Error deleting account:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // Fetch mechanics from dashboard API (same server for now)
 router.get('/mechanics', async (req, res) => {
   try {

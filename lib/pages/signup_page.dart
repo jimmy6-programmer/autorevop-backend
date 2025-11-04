@@ -22,7 +22,7 @@ class _SignupPageState extends State<SignupPage> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final _phoneController = TextEditingController();
-  String? selectedCountry = 'Rwanda';
+  String? selectedCountry;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _acceptTerms = false; // Track Terms and Conditions acceptance
@@ -457,7 +457,7 @@ class _SignupPageState extends State<SignupPage> {
                       SizedBox(height: 15),
                       CupertinoTextField(
                         controller: _phoneController,
-                        placeholder: 'Phone',
+                        placeholder: 'Phone (Optional)',
                         placeholderStyle: TextStyle(color: Colors.black),
                         style: TextStyle(color: Colors.black),
                         decoration: BoxDecoration(
@@ -475,6 +475,16 @@ class _SignupPageState extends State<SignupPage> {
                         ),
                         padding: EdgeInsets.all(16.0),
                         keyboardType: TextInputType.phone,
+                      ),
+                      Padding(
+                        padding: EdgeInsets.only(left: 16.0, top: 4.0),
+                        child: Text(
+                          'Optional – only needed if you request a service that requires this info.',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: CupertinoColors.secondaryLabel,
+                          ),
+                        ),
                       ),
                       SizedBox(height: 15),
                       CupertinoButton(
@@ -538,10 +548,20 @@ class _SignupPageState extends State<SignupPage> {
                               ),
                               SizedBox(width: 16),
                               Text(
-                                selectedCountry ?? 'Select Country',
+                                selectedCountry ?? 'Select your country',
                                 style: TextStyle(color: Colors.black),
                               ),
                             ],
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.only(left: 16.0, top: 4.0),
+                        child: Text(
+                          'Optional – only needed if you request a service that requires this info.',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: CupertinoColors.secondaryLabel,
                           ),
                         ),
                       ),
@@ -784,7 +804,7 @@ class _SignupPageState extends State<SignupPage> {
                       controller: _phoneController,
                       style: TextStyle(color: Colors.black),
                       decoration: InputDecoration(
-                        labelText: 'Phone',
+                        labelText: 'Phone (Optional)',
                         labelStyle: TextStyle(color: Colors.black),
                         prefixIcon: Icon(
                           CupertinoIcons.phone,
@@ -805,37 +825,47 @@ class _SignupPageState extends State<SignupPage> {
                         contentPadding: EdgeInsets.all(16.0),
                         fillColor: Colors.white,
                         filled: true,
+                        helperText: 'Optional – only needed if you request a service that requires this info.',
+                        helperStyle: TextStyle(
+                          fontSize: 12,
+                          color: Colors.black54,
+                        ),
                       ),
                       keyboardType: TextInputType.phone,
                     ),
                     SizedBox(height: 15),
                     DropdownButtonFormField<String>(
-                      initialValue: selectedCountry,
-                      style: TextStyle(color: Colors.black),
-                      dropdownColor: Colors.white,
-                      decoration: InputDecoration(
-                        labelText: 'Country',
-                        labelStyle: TextStyle(color: Colors.black),
-                        prefixIcon: Icon(
-                          CupertinoIcons.globe,
-                          color: Colors.grey,
-                        ),
-                        border: UnderlineInputBorder(
-                          borderSide: BorderSide(color: Colors.black),
-                        ),
-                        enabledBorder: UnderlineInputBorder(
-                          borderSide: BorderSide(color: Colors.black),
-                        ),
-                        focusedBorder: UnderlineInputBorder(
-                          borderSide: BorderSide(
-                            color: Color.fromRGBO(17, 131, 192, 1),
-                            width: 2.0,
-                          ),
-                        ),
-                        contentPadding: EdgeInsets.all(16.0),
-                        fillColor: Colors.white,
-                        filled: true,
+                    value: selectedCountry,
+                    style: TextStyle(color: Colors.black),
+                    dropdownColor: Colors.white,
+                    decoration: InputDecoration(
+                      labelText: 'Country (Optional)',
+                      labelStyle: TextStyle(color: Colors.black),
+                      prefixIcon: Icon(
+                        CupertinoIcons.globe,
+                        color: Colors.grey,
                       ),
+                      border: UnderlineInputBorder(
+                        borderSide: BorderSide(color: Colors.black),
+                      ),
+                      enabledBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(color: Colors.black),
+                      ),
+                      focusedBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Color.fromRGBO(17, 131, 192, 1),
+                          width: 2.0,
+                        ),
+                      ),
+                      contentPadding: EdgeInsets.all(16.0),
+                      fillColor: Colors.white,
+                      filled: true,
+                      helperText: 'Optional – only needed if you request a service that requires this info.',
+                      helperStyle: TextStyle(
+                        fontSize: 12,
+                        color: Colors.black54,
+                      ),
+                    ),
                       items: [
                         DropdownMenuItem(
                           value: 'Rwanda',

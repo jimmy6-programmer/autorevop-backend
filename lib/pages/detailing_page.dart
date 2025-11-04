@@ -287,7 +287,7 @@ class _DetailingPageState extends State<DetailingPage> {
                   children: [
                     const SizedBox(height: 20),
                     Text(
-                      'Professional Car Detailing',
+                      localeProvider.translate('detailingPageTitle'),
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -296,7 +296,7 @@ class _DetailingPageState extends State<DetailingPage> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Get your vehicle professionally cleaned and detailed. Our expert team uses premium products and techniques to restore your car\'s shine and protect its finish.',
+                      localeProvider.translate('detailingPageDescription'),
                       style: TextStyle(
                         fontSize: 16,
                         color: CupertinoColors.secondaryLabel,
@@ -315,7 +315,7 @@ class _DetailingPageState extends State<DetailingPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Request Detailing Service',
+                            localeProvider.translate('requestDetailingService'),
                             style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
@@ -324,7 +324,7 @@ class _DetailingPageState extends State<DetailingPage> {
                           ),
                           const SizedBox(height: 20),
                           Text(
-                            'Phone Number',
+                            localeProvider.translate('phoneNumber'),
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
@@ -347,7 +347,7 @@ class _DetailingPageState extends State<DetailingPage> {
                           ),
                           const SizedBox(height: 20),
                           Text(
-                            'Vehicle Type',
+                            localeProvider.translate('vehicleType'),
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
@@ -377,7 +377,7 @@ class _DetailingPageState extends State<DetailingPage> {
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
-                                    _selectedVehicleType ?? 'Select vehicle type',
+                                    _selectedVehicleType ?? localeProvider.translate('selectVehicleType'),
                                     style: TextStyle(
                                       color: _selectedVehicleType != null
                                           ? CupertinoColors.black // Black text for selected
@@ -394,7 +394,7 @@ class _DetailingPageState extends State<DetailingPage> {
                           ),
                           const SizedBox(height: 20),
                           Text(
-                            'Service Type',
+                            localeProvider.translate('serviceType'),
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
@@ -424,7 +424,7 @@ class _DetailingPageState extends State<DetailingPage> {
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
-                                    _selectedServiceType ?? 'Select service type',
+                                    _selectedServiceType ?? localeProvider.translate('selectServiceType'),
                                     style: TextStyle(
                                       color: _selectedServiceType != null
                                           ? CupertinoColors.black // Black text for selected
@@ -441,7 +441,7 @@ class _DetailingPageState extends State<DetailingPage> {
                           ),
                           const SizedBox(height: 20),
                           Text(
-                            'Service Location',
+                            localeProvider.translate('serviceLocation'),
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
@@ -451,7 +451,7 @@ class _DetailingPageState extends State<DetailingPage> {
                           const SizedBox(height: 8),
                           CupertinoTextField(
                             controller: _locationController,
-                            placeholder: 'Enter service location',
+                            placeholder: localeProvider.translate('enterServiceLocation'),
                             placeholderStyle: TextStyle(color: CupertinoColors.systemGrey), // Black placeholder
                             style: TextStyle(color: CupertinoColors.black), // Black input text
                             padding: const EdgeInsets.all(16),
@@ -464,7 +464,7 @@ class _DetailingPageState extends State<DetailingPage> {
                           const SizedBox(height: 30),
                           Center(
                             child: adaptiveButton(
-                              'Request Service',
+                              localeProvider.translate('requestService'),
                               _isFormValid ? _submitDetailingRequest : null,
                               isEnabled: _isFormValid,
                             ),
@@ -499,7 +499,7 @@ class _DetailingPageState extends State<DetailingPage> {
                 children: [
                   const SizedBox(height: 20),
                   Text(
-                    'Professional Car Detailing',
+                    localeProvider.translate('detailingPageTitle'),
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -508,7 +508,7 @@ class _DetailingPageState extends State<DetailingPage> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Get your vehicle professionally cleaned and detailed. Our expert team uses premium products and techniques to restore your car\'s shine and protect its finish.',
+                    localeProvider.translate('detailingPageDescription'),
                     style: TextStyle(
                       fontSize: 16,
                       color: Colors.black54,
@@ -528,7 +528,7 @@ class _DetailingPageState extends State<DetailingPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Request Detailing Service',
+                            localeProvider.translate('requestDetailingService'),
                             style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
@@ -537,7 +537,7 @@ class _DetailingPageState extends State<DetailingPage> {
                           ),
                           const SizedBox(height: 20),
                           Text(
-                            'Phone Number',
+                            localeProvider.translate('phoneNumber'),
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
@@ -570,7 +570,7 @@ class _DetailingPageState extends State<DetailingPage> {
                           ),
                           const SizedBox(height: 20),
                           Text(
-                            'Vehicle Type',
+                            localeProvider.translate('vehicleType'),
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
@@ -582,7 +582,7 @@ class _DetailingPageState extends State<DetailingPage> {
                             value: _selectedVehicleType,
                             style: TextStyle(color: Colors.black), // Black text for selected value
                             decoration: InputDecoration(
-                              hintText: 'Select vehicle type',
+                              hintText: localeProvider.translate('selectVehicleType'),
                               hintStyle: TextStyle(color: Colors.black.withOpacity(0.6)), // Black placeholder
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
@@ -613,7 +613,7 @@ class _DetailingPageState extends State<DetailingPage> {
                           ),
                           const SizedBox(height: 20),
                           Text(
-                            'Service Type',
+                            localeProvider.translate('serviceType'),
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
@@ -625,7 +625,7 @@ class _DetailingPageState extends State<DetailingPage> {
                             value: _selectedServiceType,
                             style: TextStyle(color: Colors.black), // Black text for selected value
                             decoration: InputDecoration(
-                              hintText: 'Select service type',
+                              hintText: localeProvider.translate('selectServiceType'),
                               hintStyle: TextStyle(color: Colors.black.withOpacity(0.6)), // Black placeholder
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
@@ -656,7 +656,7 @@ class _DetailingPageState extends State<DetailingPage> {
                           ),
                           const SizedBox(height: 20),
                           Text(
-                            'Service Location',
+                            localeProvider.translate('serviceLocation'),
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
@@ -668,7 +668,7 @@ class _DetailingPageState extends State<DetailingPage> {
                             controller: _locationController,
                             style: TextStyle(color: Colors.black), // Black input text
                             decoration: InputDecoration(
-                              hintText: 'Enter service location',
+                              hintText: localeProvider.translate('enterServiceLocation'),
                               hintStyle: TextStyle(color: Colors.black.withOpacity(0.6)), // Black placeholder
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
@@ -689,7 +689,7 @@ class _DetailingPageState extends State<DetailingPage> {
                           const SizedBox(height: 30),
                           Center(
                             child: adaptiveButton(
-                              'Request Detailing Service',
+                              localeProvider.translate('requestDetailingService'),
                               _isFormValid ? _submitDetailingRequest : null,
                               isEnabled: _isFormValid,
                             ),

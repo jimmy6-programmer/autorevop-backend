@@ -130,26 +130,28 @@ class MyApp extends StatelessWidget {
         final effectiveLocale = const Locale('en');
 
         return Platform.isIOS
-            ? CupertinoApp(
-                title: 'Auto RevOp',
-                debugShowCheckedModeBanner: false,
-                locale: effectiveLocale,
-                localizationsDelegates: const [
-                  GlobalMaterialLocalizations.delegate,
-                  GlobalCupertinoLocalizations.delegate,
-                  GlobalWidgetsLocalizations.delegate,
-                ],
-                supportedLocales: const [
-                  Locale('en'),
-                  Locale('fr'),
-                  Locale('rw'),
-                  Locale('sw'),
-                ],
-                theme: const CupertinoThemeData(
-                  primaryColor: CupertinoColors.activeBlue,
+            ? ScaffoldMessenger(
+                child: CupertinoApp(
+                  title: 'Auto RevOp',
+                  debugShowCheckedModeBanner: false,
+                  locale: effectiveLocale,
+                  localizationsDelegates: const [
+                    GlobalMaterialLocalizations.delegate,
+                    GlobalCupertinoLocalizations.delegate,
+                    GlobalWidgetsLocalizations.delegate,
+                  ],
+                  supportedLocales: const [
+                    Locale('en'),
+                    Locale('fr'),
+                    Locale('rw'),
+                    Locale('sw'),
+                  ],
+                  theme: const CupertinoThemeData(
+                    primaryColor: CupertinoColors.activeBlue,
+                  ),
+                  initialRoute: initialRoute,
+                  onGenerateRoute: _generateRoute,
                 ),
-                initialRoute: initialRoute,
-                onGenerateRoute: _generateRoute,
               )
             : MaterialApp(
                 title: 'Auto RevOp',

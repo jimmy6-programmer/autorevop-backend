@@ -1,4 +1,3 @@
-
 import '../widgets/adaptive_button.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -101,6 +100,63 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
+  Future<void> _deleteAccount() async {
+    final token = await AuthUtils.getToken();
+    if (token == null) return;
+
+    try {
+      final response = await http.delete(
+        Uri.parse('${getApiBaseUrl()}/api/auth/delete-account'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+
+      if (response.statusCode == 200) {
+        await AuthUtils.clearAuthData();
+        Navigator.of(
+          context,
+          rootNavigator: true,
+        ).pushNamedAndRemoveUntil('/login', (route) => false);
+      } else {
+        // Handle error
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to delete account')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Error deleting account')));
+    }
+  }
+
+  void _showDeleteAccountDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Delete Account'),
+          content: const Text(
+            'Are you sure you want to delete your account? This action cannot be undone and all your data will be permanently removed.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _deleteAccount();
+              },
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final localeProvider = Provider.of<LocaleProvider>(context);
@@ -118,7 +174,11 @@ class _ProfilePageState extends State<ProfilePage> {
                 CircleAvatar(
                   radius: 30,
                   backgroundColor: Colors.grey[300],
-                  child: Icon(CupertinoIcons.person, size: 40, color: Colors.grey[700]),
+                  child: Icon(
+                    CupertinoIcons.person,
+                    size: 40,
+                    color: Colors.grey[700],
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -152,16 +212,27 @@ class _ProfilePageState extends State<ProfilePage> {
             if (_isLoggedIn) ...[
               Card(
                 color: Colors.grey[100],
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 child: Column(
                   children: [
-                    _buildDetailRow(localeProvider.translate('fullName'), _fullName),
+                    _buildDetailRow(
+                      localeProvider.translate('fullName'),
+                      _fullName,
+                    ),
                     const Divider(height: 0),
                     _buildDetailRow(localeProvider.translate('email'), _email),
                     const Divider(height: 0),
-                    _buildDetailRow(localeProvider.translate('phoneNumber'), _phone.isEmpty ? "Add number" : _phone),
+                    _buildDetailRow(
+                      localeProvider.translate('phoneNumber'),
+                      _phone.isEmpty ? "Add number" : _phone,
+                    ),
                     const Divider(height: 0),
-                    _buildDetailRow(localeProvider.translate('country'), _country),
+                    _buildDetailRow(
+                      localeProvider.translate('country'),
+                      _country,
+                    ),
                   ],
                 ),
               ),
@@ -170,7 +241,9 @@ class _ProfilePageState extends State<ProfilePage> {
               // Show welcome message for not logged in users
               Card(
                 color: Colors.grey[100],
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(20.0),
                   child: Column(
@@ -210,24 +283,41 @@ class _ProfilePageState extends State<ProfilePage> {
 
             // Show different buttons based on login status
             if (_isLoggedIn) ...[
-              // Logout button for logged in users
-              adaptiveButton(
-                localeProvider.translate('logout'),
-                () async {
-                  await AuthUtils.clearAuthData();
-                  // Navigate to login page and clear navigation stack
-                  Navigator.of(context, rootNavigator: true).pushNamedAndRemoveUntil('/login', (route) => false);
-                },
+              // Delete Account button for logged in users
+              Container(
+                width: double.infinity,
+                margin: const EdgeInsets.only(bottom: 16),
+                child: ElevatedButton(
+                  onPressed: () => _showDeleteAccountDialog(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Text(
+                    'Delete Account',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ),
               ),
+              // Logout button for logged in users
+              adaptiveButton(localeProvider.translate('logout'), () async {
+                await AuthUtils.clearAuthData();
+                // Navigate to login page and clear navigation stack
+                Navigator.of(
+                  context,
+                  rootNavigator: true,
+                ).pushNamedAndRemoveUntil('/login', (route) => false);
+              }),
             ] else ...[
               // Login button for not logged in users
-              adaptiveButton(
-                localeProvider.translate('login'),
-                () {
-                  // Since we're in a CupertinoTabView, we need to use a different navigation approach
-                  Navigator.of(context, rootNavigator: true).pushNamed('/login');
-                },
-              ),
+              adaptiveButton(localeProvider.translate('login'), () {
+                // Since we're in a CupertinoTabView, we need to use a different navigation approach
+                Navigator.of(context, rootNavigator: true).pushNamed('/login');
+              }),
             ],
           ],
         ),
@@ -239,10 +329,7 @@ class _ProfilePageState extends State<ProfilePage> {
     return ListTile(
       title: Text(
         title,
-        style: const TextStyle(
-          fontSize: 14,
-          color: Colors.black54,
-        ),
+        style: const TextStyle(fontSize: 14, color: Colors.black54),
       ),
       trailing: Text(
         value,

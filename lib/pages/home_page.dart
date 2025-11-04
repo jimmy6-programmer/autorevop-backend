@@ -524,8 +524,8 @@ class _HomePageState extends State<HomePage> {
                   Expanded(
                     child: _buildCategoryCard(
                       icon: CupertinoIcons.sparkles,
-                      title: 'Car Detailing',
-                      subtitle: 'Professional car cleaning & detailing services',
+                      title: localeProvider.translate('detailingServicesTitle'),
+                      subtitle: localeProvider.translate('detailingServicesSubtitle'),
                       color: const Color(0xFF2196F3),
                       onTap: () {
                         if (Platform.isIOS) {
