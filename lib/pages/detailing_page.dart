@@ -579,7 +579,7 @@ class _DetailingPageState extends State<DetailingPage> {
                           ),
                           const SizedBox(height: 8),
                           DropdownButtonFormField<String>(
-                            value: _selectedVehicleType,
+                            initialValue: _selectedVehicleType,
                             style: TextStyle(color: Colors.black), // Black text for selected value
                             decoration: InputDecoration(
                               hintText: localeProvider.translate('selectVehicleType'),
@@ -622,7 +622,7 @@ class _DetailingPageState extends State<DetailingPage> {
                           ),
                           const SizedBox(height: 8),
                           DropdownButtonFormField<String>(
-                            value: _selectedServiceType,
+                            initialValue: _selectedServiceType,
                             style: TextStyle(color: Colors.black), // Black text for selected value
                             decoration: InputDecoration(
                               hintText: localeProvider.translate('selectServiceType'),

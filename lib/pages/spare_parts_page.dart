@@ -1,9 +1,10 @@
 import 'dart:io' show Platform;
 import 'package:auto_revop/models/spare_part_model.dart';
 import 'package:auto_revop/models/cart_item_model.dart';
-import 'package:auto_revop/services/inventory_service.dart';
+import 'package:auto_revop/services/optimized_api_service.dart';
 import 'package:auto_revop/widgets/adaptive_button.dart' as widgets;
 import 'package:auto_revop/widgets/cart_icon_button.dart';
+import 'package:auto_revop/widgets/skeleton_loader.dart';
 import 'package:provider/provider.dart';
 
 import 'package:flutter/cupertino.dart';
@@ -36,6 +37,15 @@ class _SparePartsPageState extends State<SparePartsPage> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Preload data when page becomes visible
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      OptimizedApiService().preloadCriticalData();
+    });
+  }
+
+  @override
   void dispose() {
     _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
@@ -44,25 +54,42 @@ class _SparePartsPageState extends State<SparePartsPage> {
 
   Future<void> _fetchInventory() async {
     try {
-      final parts = await InventoryService.fetchInventory();
-      setState(() {
-        _spareParts = parts;
-        _filteredSpareParts = parts;
-        _isLoading = false;
-      });
+      final optimizedApi = OptimizedApiService();
+      final parts = await optimizedApi.fetchSpareParts(
+        page: 1,
+        limit: 50,
+        search: _searchController.text.isNotEmpty
+            ? _searchController.text
+            : null,
+      );
+
+      if (mounted) {
+        setState(() {
+          _spareParts = parts;
+          _filteredSpareParts = parts;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _error = e.toString().contains('connected to the internet')
-            ? 'There was an error occurred, please check if you are connected to the internet.'
-            : e.toString();
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _error = e.toString().contains('connected to the internet')
+              ? 'There was an error occurred, please check if you are connected to the internet.'
+              : e.toString();
+          _isLoading = false;
+        });
+      }
     }
   }
 
   void _onSearchChanged() {
+    // Debounce search to avoid excessive filtering on every keystroke
+    final query = _searchController.text.toLowerCase();
+
+    // Only update if query actually changed and widget is mounted
+    if (!mounted) return;
+
     setState(() {
-      String query = _searchController.text.toLowerCase();
       _filteredSpareParts = _spareParts.where((part) {
         return part.name.toLowerCase().contains(query) ||
             part.description.toLowerCase().contains(query) ||
@@ -111,7 +138,7 @@ class _SparePartsPageState extends State<SparePartsPage> {
                   ),
                   Expanded(
                     child: _isLoading
-                        ? const Center(child: CupertinoActivityIndicator())
+                        ? const SparePartsListSkeletonLoader(itemCount: 5)
                         : _error != null
                         ? Center(
                             child: Column(
@@ -119,16 +146,13 @@ class _SparePartsPageState extends State<SparePartsPage> {
                               children: [
                                 Text('Error: $_error'),
                                 const SizedBox(height: 16),
-                                widgets.adaptiveButton(
-                                  'Retry',
-                                  () {
-                                    setState(() {
-                                      _error = null;
-                                      _isLoading = true;
-                                    });
-                                    _fetchInventory();
-                                  },
-                                ),
+                                widgets.adaptiveButton('Retry', () {
+                                  setState(() {
+                                    _error = null;
+                                    _isLoading = true;
+                                  });
+                                  _fetchInventory();
+                                }),
                               ],
                             ),
                           )
@@ -181,7 +205,7 @@ class _SparePartsPageState extends State<SparePartsPage> {
                 ),
                 Expanded(
                   child: _isLoading
-                      ? const Center(child: CircularProgressIndicator())
+                      ? const SparePartsListSkeletonLoader(itemCount: 5)
                       : _error != null
                       ? Center(
                           child: Column(
@@ -189,16 +213,13 @@ class _SparePartsPageState extends State<SparePartsPage> {
                             children: [
                               Text('Error: $_error'),
                               const SizedBox(height: 16),
-                              widgets.adaptiveButton(
-                                'Retry',
-                                () {
-                                  setState(() {
-                                    _error = null;
-                                    _isLoading = true;
-                                  });
-                                  _fetchInventory();
-                                },
-                              ),
+                              widgets.adaptiveButton('Retry', () {
+                                setState(() {
+                                  _error = null;
+                                  _isLoading = true;
+                                });
+                                _fetchInventory();
+                              }),
                             ],
                           ),
                         )

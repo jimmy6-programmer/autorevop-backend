@@ -3,11 +3,13 @@ import 'loading/loading_page.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lottie/lottie.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
 import 'providers/translation_provider.dart';
 import 'providers/cart_provider.dart';
+import 'services/optimized_api_service.dart';
 import 'pages/starting_page.dart';
 import 'pages/login_page.dart';
 import 'pages/signup_page.dart';
@@ -32,6 +34,9 @@ void main() async {
 
   // Preload Lottie animation
   await precacheLottie();
+
+  // Preload critical API data in background
+  OptimizedApiService().preloadCriticalData();
 
   // Get SharedPreferences for onboarding and login status
   final prefs = await SharedPreferences.getInstance();
@@ -129,9 +134,36 @@ class MyApp extends StatelessWidget {
         // Use English for system widgets since we don't have custom locales
         final effectiveLocale = const Locale('en');
 
-        return Platform.isIOS
-            ? ScaffoldMessenger(
-                child: CupertinoApp(
+        return ScreenUtilInit(
+          designSize: const Size(375, 812), // iPhone X design size
+          minTextAdapt: true,
+          splitScreenMode: true,
+          useInheritedMediaQuery: true,
+          builder: (context, child) => Platform.isIOS
+              ? ScaffoldMessenger(
+                  child: CupertinoApp(
+                    title: 'Auto RevOp',
+                    debugShowCheckedModeBanner: false,
+                    locale: effectiveLocale,
+                    localizationsDelegates: const [
+                      GlobalMaterialLocalizations.delegate,
+                      GlobalCupertinoLocalizations.delegate,
+                      GlobalWidgetsLocalizations.delegate,
+                    ],
+                    supportedLocales: const [
+                      Locale('en'),
+                      Locale('fr'),
+                      Locale('rw'),
+                      Locale('sw'),
+                    ],
+                    theme: const CupertinoThemeData(
+                      primaryColor: CupertinoColors.activeBlue,
+                    ),
+                    initialRoute: initialRoute,
+                    onGenerateRoute: _generateRoute,
+                  ),
+                )
+              : MaterialApp(
                   title: 'Auto RevOp',
                   debugShowCheckedModeBanner: false,
                   locale: effectiveLocale,
@@ -146,35 +178,14 @@ class MyApp extends StatelessWidget {
                     Locale('rw'),
                     Locale('sw'),
                   ],
-                  theme: const CupertinoThemeData(
-                    primaryColor: CupertinoColors.activeBlue,
+                  theme: ThemeData(
+                    primarySwatch: Colors.blue,
+                    fontFamily: 'Roboto',
                   ),
                   initialRoute: initialRoute,
                   onGenerateRoute: _generateRoute,
                 ),
-              )
-            : MaterialApp(
-                title: 'Auto RevOp',
-                debugShowCheckedModeBanner: false,
-                locale: effectiveLocale,
-                localizationsDelegates: const [
-                  GlobalMaterialLocalizations.delegate,
-                  GlobalCupertinoLocalizations.delegate,
-                  GlobalWidgetsLocalizations.delegate,
-                ],
-                supportedLocales: const [
-                  Locale('en'),
-                  Locale('fr'),
-                  Locale('rw'),
-                  Locale('sw'),
-                ],
-                theme: ThemeData(
-                  primarySwatch: Colors.blue,
-                  fontFamily: 'Roboto',
-                ),
-                initialRoute: initialRoute,
-                onGenerateRoute: _generateRoute,
-              );
+        );
       },
     );
   }

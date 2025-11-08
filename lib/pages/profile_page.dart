@@ -112,10 +112,24 @@ class _ProfilePageState extends State<ProfilePage> {
 
       if (response.statusCode == 200) {
         await AuthUtils.clearAuthData();
-        Navigator.of(
-          context,
-          rootNavigator: true,
-        ).pushNamedAndRemoveUntil('/login', (route) => false);
+
+        // Show success message before navigating
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Account deleted successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        // Delay navigation to allow user to see the success message
+        Future.delayed(const Duration(seconds: 2), () {
+          if (mounted) {
+            Navigator.of(
+              context,
+              rootNavigator: true,
+            ).pushNamedAndRemoveUntil('/login', (route) => false);
+          }
+        });
       } else {
         // Handle error
         ScaffoldMessenger.of(context).showSnackBar(

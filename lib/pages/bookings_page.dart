@@ -11,6 +11,8 @@ import '../utils/api_utils.dart'; // For getApiBaseUrl
 import '../utils/auth_utils.dart'; // For authentication
 import '../models/service_model.dart';
 import '../providers/translation_provider.dart';
+import '../services/optimized_api_service.dart';
+import '../widgets/skeleton_loader.dart';
 import 'success_page.dart';
 
 class BookingsPage extends StatefulWidget {
@@ -279,15 +281,6 @@ class _BookingsPageState extends State<BookingsPage> {
     'Other': ['Other'],
   };
 
-  // Map of service types to prices (in USD)
-  final Map<String, double> _servicePrices = {
-    'standardVehicleTowing': 50.0,
-    'accidentRecoveryTowing': 100.0,
-    'longDistanceTowing': 150.0,
-    'motorcycleTowing': 40.0,
-    'batteryJumpStartFuelDelivery': 25.0,
-  };
-
   // Available currencies with their symbols and conversion rates (base USD)
   final Map<String, Map<String, dynamic>> _currencies = {
     'USD': {'symbol': '\$', 'rate': 1.0},
@@ -313,37 +306,20 @@ class _BookingsPageState extends State<BookingsPage> {
     }, // Ugandan Shilling - BNR buying rate
   };
 
-  // Display names for service types
-  final Map<String, String> _serviceDisplayNames = {
-    'standardVehicleTowing': 'Standard Vehicle Towing',
-    'accidentRecoveryTowing': 'Accident Recovery Towing',
-    'longDistanceTowing': 'Long-Distance Towing',
-    'motorcycleTowing': 'Motorcycle Towing',
-    'batteryJumpStartFuelDelivery': 'Battery Jump-Start & Fuel Delivery',
-  };
-
-  // Vehicle issues for mechanic services (matching admin dashboard)
-  final List<String> _vehicleIssues = [
-    'Engine Problem',
-    'Brake Issue',
-    'Transmission',
-    'Electrical',
-    'Suspension',
-    'Tire/Wheel',
-    'Air Conditioning',
-    'Exhaust',
-    'Battery',
-    'Oil Change',
-    'Tuning',
-    'Body Work',
-    'Other',
-  ];
-
   @override
   void initState() {
     super.initState();
     _carPlateNumberController.addListener(_updateForm);
     _fetchTowingServices();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Preload data when page becomes visible
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      OptimizedApiService().preloadCriticalData();
+    });
   }
 
   @override
@@ -356,61 +332,70 @@ class _BookingsPageState extends State<BookingsPage> {
   }
 
   void _updateForm() {
-    setState(() {
-      // Trigger rebuild to update button state
-    });
+    // Only rebuild if mounted to avoid unnecessary rebuilds
+    if (mounted) {
+      setState(() {
+        // Trigger rebuild to update button state
+      });
+    }
   }
 
   void _updateTotalPrice() {
-    setState(() {
-      if (_selectedService != null) {
-        final usdPrice = _selectedService!.price;
-        final convertedPrice =
-            usdPrice * (_currencies[_selectedCurrency]!['rate'] as double);
-        final symbol = _currencies[_selectedCurrency]!['symbol'] as String;
-        _totalPrice = '$symbol${convertedPrice.toStringAsFixed(2)}';
-      } else {
-        final localeProvider = Provider.of<LocaleProvider>(context);
-        _totalPrice = localeProvider.translate('toBeDiscussed');
-      }
-    });
+    // Only rebuild if mounted to avoid unnecessary rebuilds
+    if (!mounted) return;
+
+    final newPrice = _selectedService != null
+        ? (() {
+            final usdPrice = _selectedService!.price;
+            final convertedPrice =
+                usdPrice * (_currencies[_selectedCurrency]!['rate'] as double);
+            final symbol = _currencies[_selectedCurrency]!['symbol'] as String;
+            return '$symbol${convertedPrice.toStringAsFixed(2)}';
+          })()
+        : Provider.of<LocaleProvider>(context, listen: false).translate('toBeDiscussed');
+
+    // Only update state if price actually changed
+    if (_totalPrice != newPrice) {
+      setState(() {
+        _totalPrice = newPrice;
+      });
+    }
   }
 
   Future<void> _fetchTowingServices() async {
-    print('🔄 Fetching towing services...');
-    final url = '${getApiBaseUrl()}/api/services/type/towing';
-    print('🌐 Fetching from: $url');
+    print('🔄 Fetching towing services with optimized API...');
 
     try {
-      final response = await http.get(Uri.parse(url));
+      final optimizedApi = OptimizedApiService();
+      final services = await optimizedApi.fetchTowingServices();
 
-      print('📊 Towing services response status: ${response.statusCode}');
-      print('📄 Towing services response body: ${response.body}');
+      print('✅ Loaded ${services.length} towing services from cache/API');
+      services.forEach(
+        (service) => print('  - ${service.name}: \$${service.price}'),
+      );
 
-      if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
-        print('✅ Loaded ${data.length} towing services');
-        data.forEach(
-          (service) => print('  - ${service['name']}: \$${service['price']}'),
-        );
+      if (mounted) {
         setState(() {
-          _towingServices = data.map((json) => Service.fromJson(json)).toList();
+          _towingServices = services;
           _isLoadingServices = false;
         });
-      } else {
-        print('❌ Failed to load towing services: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('💥 Exception loading towing services: $e');
+      print('🔍 Exception type: ${e.runtimeType}');
+
+      if (mounted) {
         setState(() {
           _isLoadingServices = false;
         });
+
         if (Platform.isIOS) {
           showCupertinoDialog(
             context: context,
             builder: (BuildContext context) {
               return CupertinoAlertDialog(
                 title: Text('Error'),
-                content: Text(
-                  'Failed to load towing services (${response.statusCode})',
-                ),
+                content: Text('Error loading towing services: $e'),
                 actions: [
                   CupertinoDialogAction(
                     child: Text('OK'),
@@ -425,8 +410,7 @@ class _BookingsPageState extends State<BookingsPage> {
             SnackBar(
               content: AwesomeSnackbarContent(
                 title: 'Error',
-                message:
-                    'Failed to load towing services (${response.statusCode})',
+                message: 'Error loading towing services: $e',
                 contentType: ContentType.failure,
               ),
               behavior: SnackBarBehavior.floating,
@@ -435,42 +419,6 @@ class _BookingsPageState extends State<BookingsPage> {
             ),
           );
         }
-      }
-    } catch (e) {
-      print('💥 Exception loading towing services: $e');
-      print('🔍 Exception type: ${e.runtimeType}');
-      setState(() {
-        _isLoadingServices = false;
-      });
-      if (Platform.isIOS) {
-        showCupertinoDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return CupertinoAlertDialog(
-              title: Text('Error'),
-              content: Text('Error loading towing services: $e'),
-              actions: [
-                CupertinoDialogAction(
-                  child: Text('OK'),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-              ],
-            );
-          },
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: AwesomeSnackbarContent(
-              title: 'Error',
-              message: 'Error loading towing services: $e',
-              contentType: ContentType.failure,
-            ),
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-          ),
-        );
       }
     }
   }
@@ -954,7 +902,7 @@ class _BookingsPageState extends State<BookingsPage> {
                     ),
                     const SizedBox(height: 8),
                     _isLoadingServices
-                        ? const Center(child: CupertinoActivityIndicator())
+                        ? const ServiceListSkeletonLoader(itemCount: 5)
                         : GestureDetector(
                             onTap: () => _showCupertinoPicker(
                               context,
@@ -1012,7 +960,6 @@ class _BookingsPageState extends State<BookingsPage> {
                               ),
                             ),
                           ),
-                    const SizedBox(height: 24),
                     const SizedBox(height: 24),
                     Center(
                       child: adaptiveButton(
@@ -1304,7 +1251,7 @@ class _BookingsPageState extends State<BookingsPage> {
                   ),
                   const SizedBox(height: 8),
                   _isLoadingServices
-                      ? const Center(child: CupertinoActivityIndicator())
+                      ? const ServiceListSkeletonLoader(itemCount: 5)
                       : GestureDetector(
                           onTap: () => _showCupertinoPicker(
                             context,
@@ -1361,7 +1308,6 @@ class _BookingsPageState extends State<BookingsPage> {
                             ),
                           ),
                         ),
-                  const SizedBox(height: 24),
                   const SizedBox(height: 24),
                   Center(
                     child: adaptiveButton(

@@ -11,6 +11,8 @@ import '../utils/api_utils.dart'; // For getApiBaseUrl
 import '../utils/auth_utils.dart'; // For authentication
 import '../models/service_model.dart';
 import '../providers/translation_provider.dart';
+import '../services/optimized_api_service.dart';
+import '../widgets/skeleton_loader.dart';
 import 'success_page.dart';
 
 class MechanicsPage extends StatefulWidget {
@@ -66,38 +68,38 @@ class _MechanicsPageState extends State<MechanicsPage> {
     'Other',
   ];
 
-  // Vehicle issues for mechanic services (matching admin dashboard)
-  final List<String> _vehicleIssues = [
-    'Engine Problem',
-    'Brake Issue',
-    'Transmission',
-    'Electrical',
-    'Suspension',
-    'Tire/Wheel',
-    'Air Conditioning',
-    'Exhaust',
-    'Battery',
-    'Oil Change',
-    'Tuning',
-    'Body Work',
-    'Other',
-  ];
+  // Vehicle issues for mechanic services (matching admin dashboard) - kept for potential future use
+  // final List<String> _vehicleIssues = [
+  //   'Engine Problem',
+  //   'Brake Issue',
+  //   'Transmission',
+  //   'Electrical',
+  //   'Suspension',
+  //   'Tire/Wheel',
+  //   'Air Conditioning',
+  //   'Exhaust',
+  //   'Battery',
+  //   'Oil Change',
+  //   'Tuning',
+  //   'Body Work',
+  //   'Other',
+  // ];
 
-  // Map of issues to prices (in USD) - updated to match the issues
-  final Map<String, double> _issuePrices = {
-    'Engine Problem': 80.0,
-    'Brake Issue': 60.0,
-    'Transmission': 120.0,
-    'Electrical': 70.0,
-    'Suspension': 90.0,
-    'Tire/Wheel': 40.0,
-    'Air Conditioning': 50.0,
-    'Exhaust': 65.0,
-    'Battery': 35.0,
-    'Oil Change': 25.0,
-    'Tuning': 100.0,
-    'Body Work': 150.0,
-  };
+  // Map of issues to prices (in USD) - updated to match the issues - kept for potential future use
+  // final Map<String, double> _issuePrices = {
+  //   'Engine Problem': 80.0,
+  //   'Brake Issue': 60.0,
+  //   'Transmission': 120.0,
+  //   'Electrical': 70.0,
+  //   'Suspension': 90.0,
+  //   'Tire/Wheel': 40.0,
+  //   'Air Conditioning': 50.0,
+  //   'Exhaust': 65.0,
+  //   'Battery': 35.0,
+  //   'Oil Change': 25.0,
+  //   'Tuning': 100.0,
+  //   'Body Work': 150.0,
+  // };
 
   // Available currencies with their symbols and conversion rates (base USD)
   final Map<String, Map<String, dynamic>> _currencies = {
@@ -132,6 +134,15 @@ class _MechanicsPageState extends State<MechanicsPage> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Preload data when page becomes visible
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      OptimizedApiService().preloadCriticalData();
+    });
+  }
+
+  @override
   void dispose() {
     _customIssueController.removeListener(_updateCustomIssueVisibility);
     _fullNameController.dispose();
@@ -148,63 +159,70 @@ class _MechanicsPageState extends State<MechanicsPage> {
   }
 
   void _updateForm() {
-    setState(() {
-      // Trigger rebuild to update button state
-    });
+    // Only rebuild if mounted to avoid unnecessary rebuilds
+    if (mounted) {
+      setState(() {
+        // Trigger rebuild to update button state
+      });
+    }
   }
 
   void _updateTotalPrice() {
-    setState(() {
-      if (_selectedService != null) {
-        final usdPrice = _selectedService!.price;
-        final convertedPrice =
-            usdPrice * (_currencies[_selectedCurrency]!['rate'] as double);
-        final symbol = _currencies[_selectedCurrency]!['symbol'] as String;
-        _totalPrice = '$symbol${convertedPrice.toStringAsFixed(2)}';
-      } else {
-        final localeProvider = Provider.of<LocaleProvider>(context);
-        _totalPrice = localeProvider.translate('toBeDiscussed');
-      }
-    });
+    // Only rebuild if mounted to avoid unnecessary rebuilds
+    if (!mounted) return;
+
+    final newPrice = _selectedService != null
+        ? (() {
+            final usdPrice = _selectedService!.price;
+            final convertedPrice =
+                usdPrice * (_currencies[_selectedCurrency]!['rate'] as double);
+            final symbol = _currencies[_selectedCurrency]!['symbol'] as String;
+            return '$symbol${convertedPrice.toStringAsFixed(2)}';
+          })()
+        : Provider.of<LocaleProvider>(context, listen: false).translate('toBeDiscussed');
+
+    // Only update state if price actually changed
+    if (_totalPrice != newPrice) {
+      setState(() {
+        _totalPrice = newPrice;
+      });
+    }
   }
 
   Future<void> _fetchMechanicServices() async {
-    print('🔄 Fetching mechanic services...');
-    final url = '${getApiBaseUrl()}/api/services/type/mechanic';
-    print('🌐 Fetching from: $url');
+    print('🔄 Fetching mechanic services with optimized API...');
 
     try {
-      final response = await http.get(Uri.parse(url));
+      final optimizedApi = OptimizedApiService();
+      final services = await optimizedApi.fetchMechanicServices();
 
-      print('📊 Services response status: ${response.statusCode}');
-      print('📄 Services response body: ${response.body}');
+      print('✅ Loaded ${services.length} mechanic services from cache/API');
+      services.forEach(
+        (service) => print('  - ${service.name}: \$${service.price}'),
+      );
 
-      if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
-        print('✅ Loaded ${data.length} mechanic services');
-        data.forEach(
-          (service) => print('  - ${service['name']}: \$${service['price']}'),
-        );
+      if (mounted) {
         setState(() {
-          _mechanicServices = data
-              .map((json) => Service.fromJson(json))
-              .toList();
+          _mechanicServices = services;
           _isLoadingServices = false;
         });
-      } else {
-        print('❌ Failed to load mechanic services: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('💥 Exception loading mechanic services: $e');
+      print('🔍 Exception type: ${e.runtimeType}');
+
+      if (mounted) {
         setState(() {
           _isLoadingServices = false;
         });
+
         if (Platform.isIOS) {
           showCupertinoDialog(
             context: context,
             builder: (BuildContext context) {
               return CupertinoAlertDialog(
                 title: Text('Error'),
-                content: Text(
-                  'Failed to load mechanic services (${response.statusCode})',
-                ),
+                content: Text('Error loading mechanic services: $e'),
                 actions: [
                   CupertinoDialogAction(
                     child: Text('OK'),
@@ -219,8 +237,7 @@ class _MechanicsPageState extends State<MechanicsPage> {
             SnackBar(
               content: AwesomeSnackbarContent(
                 title: 'Error',
-                message:
-                    'Failed to load mechanic services (${response.statusCode})',
+                message: 'Error loading mechanic services: $e',
                 contentType: ContentType.failure,
               ),
               behavior: SnackBarBehavior.floating,
@@ -229,42 +246,6 @@ class _MechanicsPageState extends State<MechanicsPage> {
             ),
           );
         }
-      }
-    } catch (e) {
-      print('💥 Exception loading mechanic services: $e');
-      print('🔍 Exception type: ${e.runtimeType}');
-      setState(() {
-        _isLoadingServices = false;
-      });
-      if (Platform.isIOS) {
-        showCupertinoDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return CupertinoAlertDialog(
-              title: Text('Error'),
-              content: Text('Error loading mechanic services: $e'),
-              actions: [
-                CupertinoDialogAction(
-                  child: Text('OK'),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-              ],
-            );
-          },
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: AwesomeSnackbarContent(
-              title: 'Error',
-              message: 'Error loading mechanic services: $e',
-              contentType: ContentType.failure,
-            ),
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-          ),
-        );
       }
     }
   }
@@ -485,9 +466,21 @@ class _MechanicsPageState extends State<MechanicsPage> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final localeProvider = Provider.of<LocaleProvider>(context);
+    @override
+    Widget build(BuildContext context) {
+      final localeProvider = Provider.of<LocaleProvider>(context);
+  
+      // Check if device is tablet (larger screen)
+      final double screenWidth = MediaQuery.of(context).size.width;
+      final bool isTablet = screenWidth >= 768; // Tablet width threshold
+  
+      // Responsive padding for full-screen appearance on tablets
+      final double horizontalPadding = isTablet ? 64.0 : 16.0;
+      final double verticalPadding = 16.0;
+      final EdgeInsets padding = EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: verticalPadding);
+  
+      // Responsive font size for titles
+      final double titleFontSize = isTablet ? 24.0 : 20.0;
 
     return Platform.isIOS
         ? CupertinoPageScaffold(
@@ -497,8 +490,8 @@ class _MechanicsPageState extends State<MechanicsPage> {
               transitionBetweenRoutes: false,
               middle: Text(
                 localeProvider.translate('mechanicServiceBooking'),
-                style: const TextStyle(
-                  fontSize: 20,
+                style: TextStyle(
+                  fontSize: titleFontSize,
                   fontWeight: FontWeight.bold,
                   color: Colors.black,
                 ),
@@ -506,7 +499,7 @@ class _MechanicsPageState extends State<MechanicsPage> {
             ),
             child: SafeArea(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16.0),
+                padding: padding,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -628,7 +621,7 @@ class _MechanicsPageState extends State<MechanicsPage> {
                     ),
                     const SizedBox(height: 8),
                     _isLoadingServices
-                        ? const Center(child: CupertinoActivityIndicator())
+                        ? const ServiceListSkeletonLoader(itemCount: 5)
                         : GestureDetector(
                             onTap: () => _showCupertinoPicker(
                               context,
@@ -772,8 +765,8 @@ class _MechanicsPageState extends State<MechanicsPage> {
             appBar: AppBar(
               title: Text(
                 localeProvider.translate('mechanicServiceBooking'),
-                style: const TextStyle(
-                  fontSize: 20,
+                style: TextStyle(
+                  fontSize: titleFontSize,
                   fontWeight: FontWeight.bold,
                   color: Colors.black87,
                 ),
@@ -783,7 +776,7 @@ class _MechanicsPageState extends State<MechanicsPage> {
               iconTheme: const IconThemeData(color: Colors.black87),
             ),
             body: SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
+              padding: padding,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -909,7 +902,7 @@ class _MechanicsPageState extends State<MechanicsPage> {
                   ),
                   const SizedBox(height: 8),
                   _isLoadingServices
-                      ? const Center(child: CircularProgressIndicator())
+                      ? const ServiceListSkeletonLoader(itemCount: 5)
                       : GestureDetector(
                           onTap: () => _showCupertinoPicker(
                             context,
@@ -1054,8 +1047,4 @@ class _MechanicsPageState extends State<MechanicsPage> {
           );
   }
 
-  Widget _buildCustomIssueField() {
-    // No longer needed since we use services from database
-    return const SizedBox.shrink();
-  }
 }
