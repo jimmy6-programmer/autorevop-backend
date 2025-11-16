@@ -33,12 +33,16 @@ export default function SignInPage({ onSignIn }: SignInPageProps) {
     }
 
     try {
+      console.log("Attempting login with:", credentials.email);
       const data = await adminApi.login(credentials.email, credentials.password);
+      console.log("Login response:", data);
 
       // Store the token
       localStorage.setItem('adminToken', data.token);
+      console.log("Token stored, calling onSignIn");
       onSignIn(credentials);
     } catch (error) {
+      console.error("Login error:", error);
       setError(error.message || 'Network error. Please check if the server is running.');
     } finally {
       setIsLoading(false);

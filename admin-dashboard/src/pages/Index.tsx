@@ -12,10 +12,14 @@ import SignInPage from '@/components/SignInPage';
 
 export default function Index() {
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    // Check if token exists on initial load
+    return !!localStorage.getItem('adminToken');
+  });
 
   const handleSignIn = (credentials: { email: string; password: string }) => {
     // Authentication is handled in SignInPage component
+    console.log("Sign in successful, setting authenticated to true");
     setIsAuthenticated(true);
   };
 

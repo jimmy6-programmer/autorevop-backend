@@ -89,20 +89,29 @@ export default function StatsCards() {
     const fetchStats = async () => {
       try {
         // Fetch all data in parallel
-        const [bookings, users, inventory] = await Promise.all([
+        const [bookingsResponse, usersResponse, inventoryResponse] = await Promise.all([
           bookingsApi.getAll(),
           usersApi.getAll(),
           inventoryApi.getAll()
         ]);
 
+        console.log("StatsCards - Bookings response:", bookingsResponse);
+        console.log("StatsCards - Users response:", usersResponse);
+        console.log("StatsCards - Inventory response:", inventoryResponse);
+
+        // Safe array normalization
+        const safeBookings = Array.isArray(bookingsResponse?.data) ? bookingsResponse.data : [];
+        const safeUsers = Array.isArray(usersResponse?.data) ? usersResponse.data : [];
+        const safeInventory = Array.isArray(inventoryResponse?.data) ? inventoryResponse.data : [];
+
         // Calculate stats
-        const totalBookings = bookings.length;
-        const mechanicServices = bookings.filter(b => b.type === 'mechanic').length;
-        const towingServices = bookings.filter(b => b.type === 'towing').length;
-        const totalUsers = users.length;
+        const totalBookings = safeBookings.length;
+        const mechanicServices = safeBookings.filter(b => b.type === 'mechanic').length;
+        const towingServices = safeBookings.filter(b => b.type === 'towing').length;
+        const totalUsers = safeUsers.length;
 
         // Calculate inventory value
-        const inventoryValue = inventory.reduce((total, item) => {
+        const inventoryValue = safeInventory.reduce((total, item) => {
           return total + (item.quantity * item.price);
         }, 0);
 
