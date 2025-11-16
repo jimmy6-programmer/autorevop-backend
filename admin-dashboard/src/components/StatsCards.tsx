@@ -99,10 +99,13 @@ export default function StatsCards() {
         console.log("StatsCards - Users response:", usersResponse);
         console.log("StatsCards - Inventory response:", inventoryResponse);
 
-        // Safe array normalization
-        const safeBookings = Array.isArray(bookingsResponse?.data) ? bookingsResponse.data : [];
-        const safeUsers = Array.isArray(usersResponse?.data) ? usersResponse.data : [];
-        const safeInventory = Array.isArray(inventoryResponse?.data) ? inventoryResponse.data : [];
+        // Safe array normalization - handle both direct arrays and paginated responses
+        const safeBookings = Array.isArray(bookingsResponse?.data) ? bookingsResponse.data :
+                           Array.isArray(bookingsResponse) ? bookingsResponse : [];
+        const safeUsers = Array.isArray(usersResponse?.data) ? usersResponse.data :
+                         Array.isArray(usersResponse) ? usersResponse : [];
+        const safeInventory = Array.isArray(inventoryResponse?.data) ? inventoryResponse.data :
+                             Array.isArray(inventoryResponse) ? inventoryResponse : [];
 
         // Calculate stats
         const totalBookings = safeBookings.length;
@@ -111,8 +114,10 @@ export default function StatsCards() {
         const totalUsers = safeUsers.length;
 
         // Calculate inventory value
-        const inventoryValue = safeInventory.reduce((total, item) => {
-          return total + (item.quantity * item.price);
+        const inventoryValue = safeInventory.reduce((total: number, item: any) => {
+          const quantity = typeof item.quantity === 'number' ? item.quantity : 0;
+          const price = typeof item.price === 'number' ? item.price : 0;
+          return total + (quantity * price);
         }, 0);
 
         // For now, we'll use static change percentages since we don't have historical data

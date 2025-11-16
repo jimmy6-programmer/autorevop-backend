@@ -40,11 +40,13 @@ export default function SignInPage({ onSignIn }: SignInPageProps) {
       // Store the token
       localStorage.setItem('adminToken', data.token);
       console.log("Token stored, calling onSignIn");
+
+      // Ensure loading state is cleared before calling onSignIn
+      setIsLoading(false);
       onSignIn(credentials);
     } catch (error) {
       console.error("Login error:", error);
       setError(error instanceof Error ? error.message : 'Network error. Please check if the server is running.');
-    } finally {
       setIsLoading(false);
     }
   };

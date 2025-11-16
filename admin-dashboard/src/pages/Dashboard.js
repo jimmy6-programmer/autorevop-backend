@@ -22,9 +22,12 @@ const Dashboard = () => {
         console.log("Bookings response:", bookings);
         console.log("Products response:", products);
 
-        const safeUsers = Array.isArray(users?.data) ? users.data : [];
-        const safeBookings = Array.isArray(bookings?.data) ? bookings.data : [];
-        const safeProducts = Array.isArray(products?.data) ? products.data : [];
+        const safeUsers = Array.isArray(users?.data) ? users.data :
+                         Array.isArray(users) ? users : [];
+        const safeBookings = Array.isArray(bookings?.data) ? bookings.data :
+                           Array.isArray(bookings) ? bookings : [];
+        const safeProducts = Array.isArray(products?.data) ? products.data :
+                           Array.isArray(products) ? products : [];
 
         setStats({
           users: safeUsers.length,

@@ -253,14 +253,27 @@ export const inventoryApi = {
 // Admin API
 export const adminApi = {
   async login(email: string, password: string): Promise<{ token: string }> {
-    const response = await fetch(`${API_BASE_URL}/admin/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-      mode: 'cors',
-    });
-    if (!response.ok) throw new Error(`Failed to login: ${response.statusText}`);
-    return response.json();
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+        mode: 'cors',
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+      if (!response.ok) throw new Error(`Failed to login: ${response.statusText}`);
+      return response.json();
+    } catch (error) {
+      clearTimeout(timeoutId);
+      if (error.name === 'AbortError') {
+        throw new Error('Login request timed out. Please check your connection.');
+      }
+      throw error;
+    }
   },
 
   async getProfile(token: string): Promise<User> {
