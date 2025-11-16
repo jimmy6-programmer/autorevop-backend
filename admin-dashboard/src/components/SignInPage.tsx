@@ -20,7 +20,7 @@ export default function SignInPage({ onSignIn }: SignInPageProps) {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
@@ -43,7 +43,7 @@ export default function SignInPage({ onSignIn }: SignInPageProps) {
       onSignIn(credentials);
     } catch (error) {
       console.error("Login error:", error);
-      setError(error.message || 'Network error. Please check if the server is running.');
+      setError(error instanceof Error ? error.message : 'Network error. Please check if the server is running.');
     } finally {
       setIsLoading(false);
     }
