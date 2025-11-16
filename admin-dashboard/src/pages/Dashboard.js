@@ -17,10 +17,19 @@ const Dashboard = () => {
           bookingsAPI.getBookings(),
           sparePartsAPI.getSpareParts(),
         ]);
+
+        console.log("Users response:", users);
+        console.log("Bookings response:", bookings);
+        console.log("Products response:", products);
+
+        const safeUsers = Array.isArray(users?.data) ? users.data : [];
+        const safeBookings = Array.isArray(bookings?.data) ? bookings.data : [];
+        const safeProducts = Array.isArray(products?.data) ? products.data : [];
+
         setStats({
-          users: users.data?.length || 0,
-          bookings: bookings.data?.length || 0,
-          products: products.data?.length || 0,
+          users: safeUsers.length,
+          bookings: safeBookings.length,
+          products: safeProducts.length,
         });
       } catch (error) {
         console.error('Error fetching stats:', error);

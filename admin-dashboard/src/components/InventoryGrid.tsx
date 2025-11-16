@@ -56,16 +56,19 @@ export default function InventoryGrid() {
     }
   };
 
-  const filteredInventory = inventory.filter(item => {
+  const safeInventory = Array.isArray(inventory) ? inventory : [];
+  console.log("Inventory response data:", safeInventory);
+
+  const filteredInventory = safeInventory.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         item.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         item.supplier.toLowerCase().includes(searchTerm.toLowerCase());
+                          item.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          item.supplier.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = categoryFilter === 'all' || item.category === categoryFilter;
     const matchesStatus = statusFilter === 'all' || item.status === statusFilter;
     return matchesSearch && matchesCategory && matchesStatus;
   });
 
-  const categories = [...new Set(inventory.map(item => item.category))];
+  const categories = [...new Set(safeInventory.map(item => item.category))];
 
   const handleView = (item: InventoryItem) => {
     setSelectedItem(item);

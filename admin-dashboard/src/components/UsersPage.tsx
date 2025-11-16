@@ -29,8 +29,10 @@ export default function UsersPage() {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const data = await usersApi.getAll();
-      setUsers(data);
+      const response = await usersApi.getAll();
+      console.log("Users response:", response);
+      const safeUsers = Array.isArray(response?.data) ? response.data : [];
+      setUsers(safeUsers);
       setError(null);
     } catch (err) {
       setError('Failed to load users');
@@ -40,7 +42,10 @@ export default function UsersPage() {
     }
   };
 
-  const filteredUsers = users.filter((user) => {
+  const safeUsers = Array.isArray(users) ? users : [];
+  console.log("Users data for filtering:", safeUsers);
+
+  const filteredUsers = safeUsers.filter((user) => {
     const matchesSearch =
       (user.name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
       (user.email?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||

@@ -64,8 +64,10 @@ export default function BookingsPage() {
     try {
       setLoading(true);
       setError(null);
-      const data = await bookingsApi.getAll();
-      setBookings(data);
+      const response = await bookingsApi.getAll();
+      console.log("Bookings response:", response);
+      const safeBookings = Array.isArray(response?.data) ? response.data : [];
+      setBookings(safeBookings);
     } catch (err) {
       setError('Failed to load bookings');
       console.error('Error fetching bookings:', err);
@@ -75,7 +77,8 @@ export default function BookingsPage() {
   };
 
   const filteredBookings = useMemo(() => {
-    return bookings.filter((booking) => {
+    const safeBookings = Array.isArray(bookings) ? bookings : [];
+    return safeBookings.filter((booking) => {
       const matchesSearch =
         (booking.fullName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
         (booking.phoneNumber?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
