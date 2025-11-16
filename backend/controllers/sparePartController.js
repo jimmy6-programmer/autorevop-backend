@@ -43,7 +43,7 @@ exports.getSpareParts = async (req, res) => {
 // Get spare part by ID
 exports.getSparePartById = async (req, res) => {
   try {
-    const sparePart = await SparePart.findById(req.params.id);
+    const sparePart = await SparePart.findOne({ id: req.params.id });
     if (!sparePart) {
       return res.status(404).json({ message: 'Spare part not found' });
     }
@@ -67,7 +67,7 @@ exports.createSparePart = async (req, res) => {
 // Update spare part
 exports.updateSparePart = async (req, res) => {
   try {
-    const sparePart = await SparePart.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+    const sparePart = await SparePart.findOneAndUpdate({ id: req.params.id }, req.body, { new: true, runValidators: true });
     if (!sparePart) {
       return res.status(404).json({ message: 'Spare part not found' });
     }
@@ -80,7 +80,7 @@ exports.updateSparePart = async (req, res) => {
 // Delete spare part
 exports.deleteSparePart = async (req, res) => {
   try {
-    const sparePart = await SparePart.findByIdAndDelete(req.params.id);
+    const sparePart = await SparePart.findOneAndDelete({ id: req.params.id });
     if (!sparePart) {
       return res.status(404).json({ message: 'Spare part not found' });
     }
