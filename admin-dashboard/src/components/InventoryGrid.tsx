@@ -45,8 +45,8 @@ export default function InventoryGrid() {
   const fetchInventory = async () => {
     try {
       setLoading(true);
-      const data = await inventoryApi.getAll();
-      setInventory(data);
+      const response = await inventoryApi.getAll();
+      setInventory(response.data || []);
       setError(null);
     } catch (err) {
       setError('Failed to load inventory');

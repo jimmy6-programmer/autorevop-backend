@@ -18,9 +18,9 @@ const Dashboard = () => {
           sparePartsAPI.getSpareParts(),
         ]);
         setStats({
-          users: users.data.length,
-          bookings: bookings.data.length,
-          products: products.data.length,
+          users: users.data?.length || 0,
+          bookings: bookings.data?.length || 0,
+          products: products.data?.length || 0,
         });
       } catch (error) {
         console.error('Error fetching stats:', error);

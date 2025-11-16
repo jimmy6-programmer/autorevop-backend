@@ -5,7 +5,15 @@ const Notification = require('../models/Notification');
 exports.getBookings = async (req, res) => {
   try {
     const bookings = await Booking.find().populate('serviceId', 'name type price');
-    res.json(bookings);
+    res.json({
+      data: bookings,
+      pagination: {
+        page: 1,
+        limit: bookings.length,
+        total: bookings.length,
+        pages: 1
+      }
+    });
   } catch (error) {
     res.status(500).json({ message: 'Error fetching bookings' });
   }

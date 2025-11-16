@@ -1,4 +1,5 @@
-import 'dart:io' show Platform;
+import 'dart:io' show Platform, SocketException;
+import 'dart:async';
 import 'package:auto_revop/models/spare_part_model.dart';
 import 'package:auto_revop/models/cart_item_model.dart';
 import 'package:auto_revop/services/optimized_api_service.dart';
@@ -68,14 +69,27 @@ class _SparePartsPageState extends State<SparePartsPage> {
           _spareParts = parts;
           _filteredSpareParts = parts;
           _isLoading = false;
+          _error = null; // Clear any previous error on success
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
-          _error = e.toString().contains('connected to the internet')
-              ? 'There was an error occurred, please check if you are connected to the internet.'
-              : e.toString();
+          // Handle specific exception types with user-friendly messages
+          String errorMessage =
+              'No internet connection. Please check and try again.';
+          if (e is SocketException) {
+            errorMessage =
+                'No internet connection. Please check and try again.';
+          } else if (e is TimeoutException) {
+            errorMessage =
+                'Connection timeout. Please check your internet and try again.';
+          } else if (e.toString().contains('No internet connection')) {
+            errorMessage =
+                'No internet connection. Please check and try again.';
+          }
+
+          _error = errorMessage;
           _isLoading = false;
         });
       }

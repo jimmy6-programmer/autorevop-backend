@@ -107,7 +107,7 @@ const getAuthHeaders = () => {
 
 // Bookings API
 export const bookingsApi = {
-  async getAll(): Promise<Booking[]> {
+  async getAll(): Promise<{ data: Booking[]; pagination: any }> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
@@ -185,7 +185,7 @@ export const bookingsApi = {
 
 // Inventory API (using spare-parts endpoint)
 export const inventoryApi = {
-  async getAll(params?: InventoryParams): Promise<Inventory[]> {
+  async getAll(params?: InventoryParams): Promise<{ data: Inventory[]; pagination: any }> {
     const query = new URLSearchParams(params as Record<string, string>).toString();
     const response = await fetch(`${API_BASE_URL}/spare-parts?${query}`, {
       method: 'GET',
@@ -279,7 +279,7 @@ export const adminApi = {
 
 // Users API
 export const usersApi = {
-  async getAll(): Promise<User[]> {
+  async getAll(): Promise<{ data: User[]; pagination: any }> {
     const response = await fetch(`${API_BASE_URL}/users`, {
       method: 'GET',
       headers: getAuthHeaders(),

@@ -1,4 +1,5 @@
-import 'dart:io' show Platform;
+import 'dart:io' show Platform, SocketException;
+import 'dart:async';
 
 import 'package:auto_revop/widgets/adaptive_button.dart';
 import 'package:flutter/cupertino.dart';
@@ -33,6 +34,7 @@ class _MechanicsPageState extends State<MechanicsPage> {
   String _selectedCurrency = 'USD';
   List<Service> _mechanicServices = [];
   bool _isLoadingServices = true;
+  bool _isOffline = false; // Added for offline state tracking
 
   // Popular vehicle Brands
   final List<String> _vehicleBrands = [
@@ -167,6 +169,42 @@ class _MechanicsPageState extends State<MechanicsPage> {
     }
   }
 
+  /// Reusable function to show user-friendly error messages
+  void _showErrorMessage(String message) {
+    if (!mounted) return;
+
+    if (Platform.isIOS) {
+      showCupertinoDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return CupertinoAlertDialog(
+            title: Text('Connection Error'),
+            content: Text(message),
+            actions: [
+              CupertinoDialogAction(
+                child: Text('OK'),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ],
+          );
+        },
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: AwesomeSnackbarContent(
+            title: 'Connection Error',
+            message: message,
+            contentType: ContentType.failure,
+          ),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+        ),
+      );
+    }
+  }
+
   void _updateTotalPrice() {
     // Only rebuild if mounted to avoid unnecessary rebuilds
     if (!mounted) return;
@@ -205,6 +243,7 @@ class _MechanicsPageState extends State<MechanicsPage> {
         setState(() {
           _mechanicServices = services;
           _isLoadingServices = false;
+          _isOffline = false; // Reset offline state on success
         });
       }
     } catch (e) {
@@ -214,38 +253,20 @@ class _MechanicsPageState extends State<MechanicsPage> {
       if (mounted) {
         setState(() {
           _isLoadingServices = false;
+          _isOffline = true; // Set offline state on error
         });
 
-        if (Platform.isIOS) {
-          showCupertinoDialog(
-            context: context,
-            builder: (BuildContext context) {
-              return CupertinoAlertDialog(
-                title: Text('Error'),
-                content: Text('Error loading mechanic services: $e'),
-                actions: [
-                  CupertinoDialogAction(
-                    child: Text('OK'),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                ],
-              );
-            },
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: AwesomeSnackbarContent(
-                title: 'Error',
-                message: 'Error loading mechanic services: $e',
-                contentType: ContentType.failure,
-              ),
-              behavior: SnackBarBehavior.floating,
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-            ),
-          );
+        // Handle specific exception types with user-friendly messages
+        String errorMessage = 'No internet connection. Please check and try again.';
+        if (e is SocketException) {
+          errorMessage = 'No internet connection. Please check and try again.';
+        } else if (e is TimeoutException) {
+          errorMessage = 'Connection timeout. Please check your internet and try again.';
+        } else if (e.toString().contains('No internet connection')) {
+          errorMessage = 'No internet connection. Please check and try again.';
         }
+
+        _showErrorMessage(errorMessage);
       }
     }
   }
@@ -396,73 +417,23 @@ class _MechanicsPageState extends State<MechanicsPage> {
         );
       } else {
         print('❌ Booking failed with status ${response.statusCode}');
-        if (Platform.isIOS) {
-          showCupertinoDialog(
-            context: context,
-            builder: (BuildContext context) {
-              return CupertinoAlertDialog(
-                title: Text('Error'),
-                content: Text(
-                  'Failed to book service (Status: ${response.statusCode})',
-                ),
-                actions: [
-                  CupertinoDialogAction(
-                    child: Text('OK'),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                ],
-              );
-            },
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: AwesomeSnackbarContent(
-                title: 'Error',
-                message:
-                    'Failed to book service (Status: ${response.statusCode})',
-                contentType: ContentType.failure,
-              ),
-              behavior: SnackBarBehavior.floating,
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-            ),
-          );
-        }
+        _showErrorMessage('Failed to book service. Please try again.');
       }
     } catch (e) {
       print('💥 Exception during booking: $e');
       print('🔍 Exception type: ${e.runtimeType}');
-      if (Platform.isIOS) {
-        showCupertinoDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return CupertinoAlertDialog(
-              title: Text('Error'),
-              content: Text('Error booking service: $e'),
-              actions: [
-                CupertinoDialogAction(
-                  child: Text('OK'),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-              ],
-            );
-          },
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: AwesomeSnackbarContent(
-              title: 'Error',
-              message: 'Error booking service: $e',
-              contentType: ContentType.failure,
-            ),
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-          ),
-        );
+
+      // Handle specific exception types with user-friendly messages
+      String errorMessage = 'No internet connection. Please check and try again.';
+      if (e is SocketException) {
+        errorMessage = 'No internet connection. Please check and try again.';
+      } else if (e is TimeoutException) {
+        errorMessage = 'Connection timeout. Please check your internet and try again.';
+      } else if (e.toString().contains('No internet connection')) {
+        errorMessage = 'No internet connection. Please check and try again.';
       }
+
+      _showErrorMessage(errorMessage);
     }
   }
 
@@ -622,7 +593,50 @@ class _MechanicsPageState extends State<MechanicsPage> {
                     const SizedBox(height: 8),
                     _isLoadingServices
                         ? const ServiceListSkeletonLoader(itemCount: 5)
-                        : GestureDetector(
+                        : _isOffline
+                            ? Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: CupertinoColors.systemGrey6,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Column(
+                                  children: [
+                                    Icon(
+                                      CupertinoIcons.wifi_slash,
+                                      color: CupertinoColors.systemGrey,
+                                      size: 32,
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'No internet connection',
+                                      style: TextStyle(
+                                        color: CupertinoColors.systemGrey,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    CupertinoButton(
+                                      padding: EdgeInsets.zero,
+                                      child: Text(
+                                        'Retry',
+                                        style: TextStyle(
+                                          color: CupertinoColors.activeBlue,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                      onPressed: () {
+                                        setState(() {
+                                          _isLoadingServices = true;
+                                          _isOffline = false;
+                                        });
+                                        _fetchMechanicServices();
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : GestureDetector(
                             onTap: () => _showCupertinoPicker(
                               context,
                               [
@@ -903,7 +917,49 @@ class _MechanicsPageState extends State<MechanicsPage> {
                   const SizedBox(height: 8),
                   _isLoadingServices
                       ? const ServiceListSkeletonLoader(itemCount: 5)
-                      : GestureDetector(
+                      : _isOffline
+                          ? Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.grey[100],
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Column(
+                                children: [
+                                  Icon(
+                                    Icons.wifi_off,
+                                    color: Colors.grey[600],
+                                    size: 32,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'No internet connection',
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  TextButton(
+                                    child: Text(
+                                      'Retry',
+                                      style: TextStyle(
+                                        color: Colors.blue,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                    onPressed: () {
+                                      setState(() {
+                                        _isLoadingServices = true;
+                                        _isOffline = false;
+                                      });
+                                      _fetchMechanicServices();
+                                    },
+                                  ),
+                                ],
+                              ),
+                            )
+                          : GestureDetector(
                           onTap: () => _showCupertinoPicker(
                             context,
                             [
