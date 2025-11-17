@@ -151,19 +151,14 @@ exports.updateDetailingPlans = async (req, res) => {
     console.log('🔄 Updating detailing plans...');
     console.log('📋 Update data:', JSON.stringify(req.body, null, 2));
 
-    let detailingService = await DetailingService.findOne();
-    
-    if (!detailingService) {
-      // Create new detailing service if none exists
-      detailingService = new DetailingService(req.body);
-    } else {
-      // Update existing detailing service
-      Object.assign(detailingService, req.body);
-    }
-    
-    await detailingService.save();
+    const detailingService = await DetailingService.findOneAndUpdate(
+      {},
+      req.body,
+      { new: true, upsert: true, runValidators: true }
+    );
+
     console.log('✅ Detailing plans updated successfully');
-    
+
     res.json({
       basicPrice: detailingService.basicPrice,
       standardPrice: detailingService.standardPrice,
