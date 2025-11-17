@@ -151,10 +151,16 @@ exports.updateDetailingPlans = async (req, res) => {
     console.log('🔄 Updating detailing plans...');
     console.log('📋 Update data:', JSON.stringify(req.body, null, 2));
 
+    // Ensure prices are numbers and currency is RWF
+    req.body.basicPrice = parseFloat(req.body.basicPrice) || 0;
+    req.body.standardPrice = parseFloat(req.body.standardPrice) || 0;
+    req.body.premiumPrice = parseFloat(req.body.premiumPrice) || 0;
+    req.body.currency = 'RWF';
+
     const detailingService = await DetailingService.findOneAndUpdate(
       {},
       req.body,
-      { new: true, upsert: true, runValidators: true }
+      { new: true, upsert: true }
     );
 
     console.log('✅ Detailing plans updated successfully');
