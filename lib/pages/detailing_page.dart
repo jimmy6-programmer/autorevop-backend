@@ -176,7 +176,7 @@ class _DetailingPageState extends State<DetailingPage> {
       'fullName': 'Customer', // Add a default name since detailing doesn't require name
       'phoneNumber': _phoneController.text,
       'vehicleType': _selectedVehicleType,
-      'planType': _selectedPlanType,
+      'serviceType': _selectedPlanType, // Changed from 'planType' to 'serviceType'
       'location': _locationController.text,
       'totalPrice': _convertedPrice.toStringAsFixed(2),
       'currency': _selectedCurrency,
