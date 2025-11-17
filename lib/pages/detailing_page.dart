@@ -32,8 +32,6 @@ class _DetailingPageState extends State<DetailingPage> {
   final List<String> _vehicleTypes = [
     'Small Car (Sedan/Hatchback)',
     'SUV/Crossover',
-    'Truck/Pickup',
-    'Van/Minivan'
   ];
 
   final List<String> _planTypes = [
@@ -158,7 +156,7 @@ class _DetailingPageState extends State<DetailingPage> {
     if (_selectedPlanType == null) return 0.0;
     final basePrice = _planPrices[_selectedPlanType] ?? 0.0;
     final rate = _exchangeRates[_selectedCurrency] ?? 1.0;
-    return basePrice * rate;
+    return basePrice / rate;
   }
 
   void _updateButtonState() {
