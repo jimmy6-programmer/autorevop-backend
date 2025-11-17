@@ -21,13 +21,13 @@ router.get('/:id', getServiceById);
 // POST /api/services - Create service
 router.post('/', adminAuth, createService);
 
+// PUT /api/services/detailing-plans - Update detailing plan prices
+router.put('/detailing-plans', adminAuth, updateDetailingPlans);
+
 // PUT /api/services/:id - Update service
 router.put('/:id', adminAuth, updateService);
 
 // DELETE /api/services/:id - Delete service
 router.delete('/:id', adminAuth, deleteService);
-
-// PUT /api/services/detailing-plans - Update detailing plan prices
-router.put('/detailing-plans', adminAuth, updateDetailingPlans);
 
 module.exports = router;
