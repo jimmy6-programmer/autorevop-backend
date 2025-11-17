@@ -200,6 +200,17 @@ exports.updateDetailingPlans = async (req, res) => {
     );
 
     console.log('✅ Detailing plans updated successfully');
+    console.log('📊 Updated Detailing Service Details:', {
+      id: detailingService._id,
+      basicPrice: detailingService.basicPrice,
+      standardPrice: detailingService.standardPrice,
+      premiumPrice: detailingService.premiumPrice,
+      currency: detailingService.currency,
+      basicDescription: detailingService.basicDescription,
+      standardDescription: detailingService.standardDescription,
+      premiumDescription: detailingService.premiumDescription,
+      updatedAt: detailingService.updatedAt
+    });
 
     // Return response in the format expected by frontend
     res.json({
