@@ -98,6 +98,8 @@ const Map<String, Map<String, String>> translations = {
     'requestService': 'Request Service',
     'detailingSuccessMessage':
         'Detailing service request submitted successfully. We will contact you soon.',
+    'planType': 'Plan Type',
+    'selectPlanType': 'Select Plan Type',
   },
   'fr': {
     'home': 'Accueil',
@@ -186,6 +188,8 @@ const Map<String, Map<String, String>> translations = {
     'requestService': 'Demander le service',
     'detailingSuccessMessage':
         'Demande de service de détail soumise avec succès. Nous vous contacterons bientôt.',
+    'planType': 'Type de Plan',
+    'selectPlanType': 'Sélectionner le Type de Plan',
   },
   'rw': {
     'home': 'Ahabanza',
@@ -272,6 +276,8 @@ const Map<String, Map<String, String>> translations = {
     'requestService': 'Saba Serivisi',
     'detailingSuccessMessage':
         'Gusaba serivisi yo gusukura byoherejwe neza. Tuzagusangana vuba.',
+    'planType': 'Ubwoko bw\'Igenamigambi',
+    'selectPlanType': 'Hitamo Ubwoko bw\'Igenamigambi',
   },
   'sw': {
     'home': 'Nyumbani',
@@ -358,5 +364,7 @@ const Map<String, Map<String, String>> translations = {
     'requestService': 'Omba Huduma',
     'detailingSuccessMessage':
         'Ombi la huduma ya utengenezaji limewasilishwa vizuri. Tutawasiliana nawe hivi karibuni.',
+    'planType': 'Aina ya Mpango',
+    'selectPlanType': 'Chagua Aina ya Mpango',
   },
 };
