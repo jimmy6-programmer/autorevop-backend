@@ -109,10 +109,10 @@ exports.getDetailingPlans = async (req, res) => {
     if (!detailingService) {
       console.log('🔄 Creating default detailing service...');
       detailingService = new DetailingService({
-        basicPrice: 5000,
-        standardPrice: 10000,
-        premiumPrice: 20000,
-        currency: 'RWF',
+        basicPrice: 50,
+        standardPrice: 100,
+        premiumPrice: 200,
+        currency: 'USD',
         basicDescription: 'Exterior cleaning only',
         standardDescription: 'Exterior + interior cleaning',
         premiumDescription: 'Full detailing (exterior, interior, waxing, vacuuming, polishing, etc.)'
@@ -151,11 +151,11 @@ exports.updateDetailingPlans = async (req, res) => {
     console.log('🔄 Updating detailing plans...');
     console.log('📋 Update data:', JSON.stringify(req.body, null, 2));
 
-    // Ensure prices are numbers and currency is RWF
+    // Ensure prices are numbers and currency is USD
     req.body.basicPrice = parseFloat(req.body.basicPrice) || 0;
     req.body.standardPrice = parseFloat(req.body.standardPrice) || 0;
     req.body.premiumPrice = parseFloat(req.body.premiumPrice) || 0;
-    req.body.currency = 'RWF';
+    req.body.currency = 'USD';
 
     const detailingService = await DetailingService.findOneAndUpdate(
       {},

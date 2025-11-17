@@ -11,7 +11,6 @@ interface DetailingPlans {
   basicPrice: number;
   standardPrice: number;
   premiumPrice: number;
-  currency: string;
   basicDescription: string;
   standardDescription: string;
   premiumDescription: string;
@@ -19,10 +18,9 @@ interface DetailingPlans {
 
 export default function DetailingServiceManager() {
   const [plans, setPlans] = useState<DetailingPlans>({
-    basicPrice: 5000,
-    standardPrice: 10000,
-    premiumPrice: 20000,
-    currency: 'RWF',
+    basicPrice: 50,
+    standardPrice: 100,
+    premiumPrice: 200,
     basicDescription: 'Exterior cleaning only',
     standardDescription: 'Exterior + interior cleaning',
     premiumDescription: 'Full detailing (exterior, interior, waxing, vacuuming, polishing, etc.)'
@@ -53,7 +51,6 @@ export default function DetailingServiceManager() {
           basicPrice: data.basicPrice,
           standardPrice: data.standardPrice,
           premiumPrice: data.premiumPrice,
-          currency: data.currency,
           basicDescription: data.basicDescription,
           standardDescription: data.standardDescription,
           premiumDescription: data.premiumDescription
@@ -140,25 +137,6 @@ export default function DetailingServiceManager() {
       </CardHeader>
 
       <CardContent className="space-y-6">
-        {/* Currency Selection */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="currency">Base Currency</Label>
-            <Select value={plans.currency} onValueChange={(value) => updatePlan('currency', value)}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="RWF">RWF (Rwandan Franc)</SelectItem>
-                <SelectItem value="USD">USD (US Dollar)</SelectItem>
-                <SelectItem value="EUR">EUR (Euro)</SelectItem>
-                <SelectItem value="KES">KES (Kenyan Shilling)</SelectItem>
-                <SelectItem value="TZS">TZS (Tanzanian Shilling)</SelectItem>
-                <SelectItem value="UGX">UGX (Ugandan Shilling)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
 
         {/* Basic Plan */}
         <Card className="border-green-200 bg-green-50">
@@ -184,7 +162,7 @@ export default function DetailingServiceManager() {
               </div>
               <div className="flex items-end">
                 <span className="text-sm text-slate-600 bg-white px-3 py-2 rounded border">
-                  {plans.basicPrice.toFixed(2)} {plans.currency}
+                  {plans.basicPrice.toFixed(2)} USD
                 </span>
               </div>
             </div>
@@ -225,7 +203,7 @@ export default function DetailingServiceManager() {
               </div>
               <div className="flex items-end">
                 <span className="text-sm text-slate-600 bg-white px-3 py-2 rounded border">
-                  {plans.standardPrice.toFixed(2)} {plans.currency}
+                  {plans.standardPrice.toFixed(2)} USD
                 </span>
               </div>
             </div>
@@ -266,7 +244,7 @@ export default function DetailingServiceManager() {
               </div>
               <div className="flex items-end">
                 <span className="text-sm text-slate-600 bg-white px-3 py-2 rounded border">
-                  {plans.premiumPrice.toFixed(2)} {plans.currency}
+                  {plans.premiumPrice.toFixed(2)} USD
                 </span>
               </div>
             </div>

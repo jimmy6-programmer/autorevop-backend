@@ -4,22 +4,22 @@ const detailingServiceSchema = new mongoose.Schema({
   basicPrice: {
     type: Number,
     required: true,
-    default: 5000, // Default price in RWF
+    default: 50, // Default price in USD
   },
   standardPrice: {
     type: Number,
     required: true,
-    default: 10000, // Default price in RWF
+    default: 100, // Default price in USD
   },
   premiumPrice: {
     type: Number,
     required: true,
-    default: 20000, // Default price in RWF
+    default: 200, // Default price in USD
   },
   currency: {
     type: String,
     required: true,
-    default: 'RWF',
+    default: 'USD',
   },
   basicDescription: {
     type: String,
