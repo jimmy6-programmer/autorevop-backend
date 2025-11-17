@@ -21,7 +21,13 @@ class _DetailingPageState extends State<DetailingPage> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _locationController = TextEditingController();
   String? _selectedVehicleType;
-  String? _selectedServiceType;
+  String? _selectedPlanType;
+  String? _selectedCurrency = 'RWF';
+  Map<String, double> _planPrices = {
+    'Basic': 0.0,
+    'Standard': 0.0,
+    'Premium': 0.0,
+  };
 
   final List<String> _vehicleTypes = [
     'Small Car (Sedan/Hatchback)',
@@ -30,11 +36,78 @@ class _DetailingPageState extends State<DetailingPage> {
     'Van/Minivan'
   ];
 
-  final List<String> _serviceTypes = [
-    'Exterior Cleaning',
-    'Interior Cleaning',
-    'General Cleaning'
+  final List<String> _planTypes = [
+    'Basic',
+    'Standard',
+    'Premium'
   ];
+
+  final Map<String, String> _planDescriptions = {
+    'Basic': 'Exterior cleaning only',
+    'Standard': 'Exterior + interior cleaning',
+    'Premium': 'Full detailing (exterior, interior, waxing, vacuuming, polishing, etc.)',
+  };
+
+  final Map<String, double> _exchangeRates = {
+    'AED': 396.335405,
+    'AOA': 1.580206,
+    'AUD': 949.651989,
+    'BIF': 0.492768,
+    'BRL': 274.848807,
+    'CAD': 1037.553937,
+    'CHF': 1831.695045,
+    'CNH': 204.86629,
+    'CNY': 204.891038,
+    'CZK': 69.906818,
+    'DKK': 226.195793,
+    'EGP': 30.900265,
+    'ETB': 9.321831,
+    'EUR': 1689.095122,
+    'GBP': 1914.662035,
+    'GHS': 132.946911,
+    'GNF': 0.16741,
+    'HKD': 187.288958,
+    'HUF': 4.394879,
+    'IDR': 0.087344,
+    'ILS': 451.518869,
+    'INR': 16.429482,
+    'JPY': 9.413543,
+    'JOD': 2053.233926,
+    'KES': 11.26306,
+    'KMF': 3.434819,
+    'KRW': 0.99791,
+    'KWD': 4742.751425,
+    'LSL': 85.115662,
+    'LYD': 266.83787,
+    'MAD': 157.619521,
+    'MRO': 4.072433,
+    'MUR': 31.764247,
+    'MWK': 0.839234,
+    'MZN': 22.781603,
+    'NGN': 1.008828,
+    'NOK': 143.927558,
+    'PKR': 5.150408,
+    'PLN': 399.671233,
+    'QAR': 399.346603,
+    'RUB': 18.037346,
+    'RWF': 1.0, // Base currency
+    'SAR': 388.208009,
+    'SDG': 2.425991,
+    'SEK': 153.716682,
+    'SGD': 1119.154715,
+    'SSP': 0.318807,
+    'SZL': 85.161518,
+    'TRY': 34.388218,
+    'TZS': 0.598309,
+    'UGX': 0.408335,
+    'USD': 1455.74,
+    'XAF': 2.57666,
+    'XDR': 1980.607057,
+    'XOF': 2.572293,
+    'ZAR': 85.115662,
+    'ZMW': 64.441243,
+    'ZIG': 3.836603,
+  };
 
   @override
   void dispose() {
@@ -49,7 +122,7 @@ class _DetailingPageState extends State<DetailingPage> {
     return _phoneController.text.trim().isNotEmpty &&
            _locationController.text.trim().isNotEmpty &&
            _selectedVehicleType != null &&
-           _selectedServiceType != null;
+           _selectedPlanType != null;
   }
 
   @override
@@ -58,6 +131,34 @@ class _DetailingPageState extends State<DetailingPage> {
     // Add listeners to update button state when form changes
     _phoneController.addListener(_updateButtonState);
     _locationController.addListener(_updateButtonState);
+    _fetchPlanPrices();
+  }
+
+  Future<void> _fetchPlanPrices() async {
+    try {
+      final url = '${getApiBaseUrl()}/api/services/detailing-plans';
+      final response = await http.get(Uri.parse(url));
+      
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          _planPrices = {
+            'Basic': (data['basicPrice'] ?? 0.0).toDouble(),
+            'Standard': (data['standardPrice'] ?? 0.0).toDouble(),
+            'Premium': (data['premiumPrice'] ?? 0.0).toDouble(),
+          };
+        });
+      }
+    } catch (e) {
+      print('Error fetching plan prices: $e');
+    }
+  }
+
+  double get _convertedPrice {
+    if (_selectedPlanType == null) return 0.0;
+    final basePrice = _planPrices[_selectedPlanType] ?? 0.0;
+    final rate = _exchangeRates[_selectedCurrency] ?? 1.0;
+    return basePrice * rate;
   }
 
   void _updateButtonState() {
@@ -77,10 +178,10 @@ class _DetailingPageState extends State<DetailingPage> {
       'fullName': 'Customer', // Add a default name since detailing doesn't require name
       'phoneNumber': _phoneController.text,
       'vehicleType': _selectedVehicleType,
-      'serviceType': _selectedServiceType,
+      'planType': _selectedPlanType,
       'location': _locationController.text,
-      'totalPrice': '0', // Default price for detailing
-      'currency': 'USD',
+      'totalPrice': _convertedPrice.toStringAsFixed(2),
+      'currency': _selectedCurrency,
     };
 
     try {
@@ -97,7 +198,8 @@ class _DetailingPageState extends State<DetailingPage> {
         _locationController.clear();
         setState(() {
           _selectedVehicleType = null;
-          _selectedServiceType = null;
+          _selectedPlanType = null;
+          _selectedCurrency = 'RWF';
         });
 
         if (Platform.isIOS) {
@@ -394,7 +496,7 @@ class _DetailingPageState extends State<DetailingPage> {
                           ),
                           const SizedBox(height: 20),
                           Text(
-                            localeProvider.translate('serviceType'),
+                            'Plan Type',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
@@ -405,11 +507,11 @@ class _DetailingPageState extends State<DetailingPage> {
                           GestureDetector(
                             onTap: () => _showCupertinoPicker(
                               context,
-                              _serviceTypes,
-                              _selectedServiceType,
+                              _planTypes,
+                              _selectedPlanType,
                               (value) {
                                 setState(() {
-                                  _selectedServiceType = value;
+                                  _selectedPlanType = value;
                                 });
                               },
                             ),
@@ -424,9 +526,9 @@ class _DetailingPageState extends State<DetailingPage> {
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
-                                    _selectedServiceType ?? localeProvider.translate('selectServiceType'),
+                                    _selectedPlanType ?? 'Select Plan Type',
                                     style: TextStyle(
-                                      color: _selectedServiceType != null
+                                      color: _selectedPlanType != null
                                           ? CupertinoColors.black // Black text for selected
                                           : CupertinoColors.black.withOpacity(0.6), // Black placeholder
                                     ),
@@ -439,6 +541,116 @@ class _DetailingPageState extends State<DetailingPage> {
                               ),
                             ),
                           ),
+                          // Plan Description Box
+                          if (_selectedPlanType != null) ...[
+                            const SizedBox(height: 20),
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: CupertinoColors.systemGrey6,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: CupertinoColors.systemGrey4),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Plan Description',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: CupertinoColors.label,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    _planDescriptions[_selectedPlanType] ?? '',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: CupertinoColors.secondaryLabel,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                          // Cost Box with Currency Conversion
+                          if (_selectedPlanType != null) ...[
+                            const SizedBox(height: 20),
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: CupertinoColors.systemBlue.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: CupertinoColors.systemBlue.withOpacity(0.3)),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        'Cost',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          color: CupertinoColors.label,
+                                        ),
+                                      ),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: CupertinoColors.white,
+                                          borderRadius: BorderRadius.circular(6),
+                                          border: Border.all(color: CupertinoColors.systemGrey4),
+                                        ),
+                                        child: GestureDetector(
+                                          onTap: () => _showCupertinoPicker(
+                                            context,
+                                            _exchangeRates.keys.toList(),
+                                            _selectedCurrency,
+                                            (value) {
+                                              setState(() {
+                                                _selectedCurrency = value;
+                                              });
+                                            },
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Text(
+                                                _selectedCurrency ?? 'RWF',
+                                                style: TextStyle(
+                                                  fontSize: 14,
+                                                  color: CupertinoColors.black,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 4),
+                                              Icon(
+                                                CupertinoIcons.chevron_down,
+                                                size: 16,
+                                                color: CupertinoColors.systemGrey,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    '${_convertedPrice.toStringAsFixed(2)} ${_selectedCurrency}',
+                                    style: TextStyle(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold,
+                                      color: CupertinoColors.systemBlue,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                           const SizedBox(height: 20),
                           Text(
                             localeProvider.translate('serviceLocation'),
@@ -613,7 +825,7 @@ class _DetailingPageState extends State<DetailingPage> {
                           ),
                           const SizedBox(height: 20),
                           Text(
-                            localeProvider.translate('serviceType'),
+                            'Plan Type',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
@@ -622,10 +834,10 @@ class _DetailingPageState extends State<DetailingPage> {
                           ),
                           const SizedBox(height: 8),
                           DropdownButtonFormField<String>(
-                            initialValue: _selectedServiceType,
+                            initialValue: _selectedPlanType,
                             style: TextStyle(color: Colors.black), // Black text for selected value
                             decoration: InputDecoration(
-                              hintText: localeProvider.translate('selectServiceType'),
+                              hintText: 'Select Plan Type',
                               hintStyle: TextStyle(color: Colors.black.withOpacity(0.6)), // Black placeholder
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
@@ -642,7 +854,7 @@ class _DetailingPageState extends State<DetailingPage> {
                               filled: true,
                               fillColor: Colors.white, // White background for dark mode
                             ),
-                            items: _serviceTypes.map((type) {
+                            items: _planTypes.map((type) {
                               return DropdownMenuItem<String>(
                                 value: type,
                                 child: Text(type, style: TextStyle(color: Colors.black)), // Black dropdown text
@@ -650,10 +862,101 @@ class _DetailingPageState extends State<DetailingPage> {
                             }).toList(),
                             onChanged: (value) {
                               setState(() {
-                                _selectedServiceType = value;
+                                _selectedPlanType = value;
                               });
                             },
                           ),
+                          // Plan Description Box
+                          if (_selectedPlanType != null) ...[
+                            const SizedBox(height: 20),
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.grey[50],
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: Colors.grey.shade300),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Plan Description',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    _planDescriptions[_selectedPlanType] ?? '',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.black54,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                          // Cost Box with Currency Conversion
+                          if (_selectedPlanType != null) ...[
+                            const SizedBox(height: 20),
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.blue[50],
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: Colors.blue.shade200),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        'Cost',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.black87,
+                                        ),
+                                      ),
+                                      DropdownButton<String>(
+                                        value: _selectedCurrency,
+                                        style: TextStyle(color: Colors.black),
+                                        underline: Container(
+                                          height: 1,
+                                          color: Colors.grey.shade300,
+                                        ),
+                                        items: _exchangeRates.keys.map((currency) {
+                                          return DropdownMenuItem<String>(
+                                            value: currency,
+                                            child: Text(currency),
+                                          );
+                                        }).toList(),
+                                        onChanged: (value) {
+                                          setState(() {
+                                            _selectedCurrency = value;
+                                          });
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    '${_convertedPrice.toStringAsFixed(2)} ${_selectedCurrency}',
+                                    style: TextStyle(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.blue[700],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                           const SizedBox(height: 20),
                           Text(
                             localeProvider.translate('serviceLocation'),

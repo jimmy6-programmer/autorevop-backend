@@ -2,25 +2,53 @@ import 'dart:io' show Platform;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-Widget adaptiveButton(String text, VoidCallback? onPressed, {bool isLoading = false, bool isEnabled = true}) {
+Widget adaptiveButton(
+  String text,
+  VoidCallback? onPressed, {
+  bool isLoading = false,
+  bool isEnabled = true,
+  EdgeInsets? padding,
+  double? fontSize,
+}) {
   final effectiveOnPressed = isEnabled ? onPressed : null;
   return Platform.isIOS
-      ? _IOSButton(text: text, onPressed: effectiveOnPressed, isLoading: isLoading)
-      : _AndroidButton(text: text, onPressed: effectiveOnPressed, isLoading: isLoading);
+      ? _IOSButton(
+          text: text,
+          onPressed: effectiveOnPressed,
+          isLoading: isLoading,
+          padding: padding,
+          fontSize: fontSize,
+        )
+      : _AndroidButton(
+          text: text,
+          onPressed: effectiveOnPressed,
+          isLoading: isLoading,
+          padding: padding,
+          fontSize: fontSize,
+        );
 }
 
 class _IOSButton extends StatefulWidget {
   final String text;
   final VoidCallback? onPressed;
   final bool isLoading;
+  final EdgeInsets? padding;
+  final double? fontSize;
 
-  const _IOSButton({required this.text, required this.onPressed, this.isLoading = false});
+  const _IOSButton({
+    required this.text,
+    required this.onPressed,
+    this.isLoading = false,
+    this.padding,
+    this.fontSize,
+  });
 
   @override
   _IOSButtonState createState() => _IOSButtonState();
 }
 
-class _IOSButtonState extends State<_IOSButton> with SingleTickerProviderStateMixin {
+class _IOSButtonState extends State<_IOSButton>
+    with SingleTickerProviderStateMixin {
   double _scale = 1.0;
 
   void _onTapDown(TapDownDetails details) {
@@ -53,12 +81,18 @@ class _IOSButtonState extends State<_IOSButton> with SingleTickerProviderStateMi
           decoration: BoxDecoration(
             gradient: widget.onPressed != null
                 ? LinearGradient(
-                    colors: [Color.fromRGBO(17, 131, 192, 1), Color.fromRGBO(106, 27, 154, 1)],
+                    colors: [
+                      Color.fromRGBO(17, 131, 192, 1),
+                      Color.fromRGBO(106, 27, 154, 1),
+                    ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   )
                 : LinearGradient(
-                    colors: [Colors.grey, Colors.grey], // Greyed out when disabled
+                    colors: [
+                      Colors.grey,
+                      Colors.grey,
+                    ], // Greyed out when disabled
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -72,16 +106,22 @@ class _IOSButtonState extends State<_IOSButton> with SingleTickerProviderStateMi
             ],
           ),
           child: CupertinoButton.filled(
-            onPressed: widget.isLoading ? null : widget.onPressed, // Disable when loading
-            padding: EdgeInsets.symmetric(horizontal: 40, vertical: 20),
+            onPressed: widget.isLoading
+                ? null
+                : widget.onPressed, // Disable when loading
+            padding:
+                widget.padding ??
+                EdgeInsets.symmetric(horizontal: 40, vertical: 20),
             borderRadius: BorderRadius.circular(25),
             child: widget.isLoading
                 ? CupertinoActivityIndicator(color: Colors.white)
                 : Text(
                     widget.text,
                     style: TextStyle(
-                      color: widget.onPressed != null ? Colors.white : Colors.grey.shade400, // Grey text when disabled
-                      fontSize: 20,
+                      color: widget.onPressed != null
+                          ? Colors.white
+                          : Colors.grey.shade400, // Grey text when disabled
+                      fontSize: widget.fontSize ?? 20,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 1.2,
                     ),
@@ -97,14 +137,23 @@ class _AndroidButton extends StatefulWidget {
   final String text;
   final VoidCallback? onPressed;
   final bool isLoading;
+  final EdgeInsets? padding;
+  final double? fontSize;
 
-  const _AndroidButton({required this.text, required this.onPressed, this.isLoading = false});
+  const _AndroidButton({
+    required this.text,
+    required this.onPressed,
+    this.isLoading = false,
+    this.padding,
+    this.fontSize,
+  });
 
   @override
   _AndroidButtonState createState() => _AndroidButtonState();
 }
 
-class _AndroidButtonState extends State<_AndroidButton> with SingleTickerProviderStateMixin {
+class _AndroidButtonState extends State<_AndroidButton>
+    with SingleTickerProviderStateMixin {
   double _scale = 1.0;
 
   void _onTapDown(TapDownDetails details) {
@@ -137,12 +186,18 @@ class _AndroidButtonState extends State<_AndroidButton> with SingleTickerProvide
           decoration: BoxDecoration(
             gradient: widget.onPressed != null
                 ? LinearGradient(
-                    colors: [Color.fromRGBO(17, 131, 192, 1), Color.fromRGBO(106, 27, 154, 1)],
+                    colors: [
+                      Color.fromRGBO(17, 131, 192, 1),
+                      Color.fromRGBO(106, 27, 154, 1),
+                    ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   )
                 : LinearGradient(
-                    colors: [Colors.grey, Colors.grey], // Greyed out when disabled
+                    colors: [
+                      Colors.grey,
+                      Colors.grey,
+                    ], // Greyed out when disabled
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -156,11 +211,17 @@ class _AndroidButtonState extends State<_AndroidButton> with SingleTickerProvide
             ],
           ),
           child: ElevatedButton(
-            onPressed: widget.isLoading ? null : widget.onPressed, // Disable when loading
+            onPressed: widget.isLoading
+                ? null
+                : widget.onPressed, // Disable when loading
             style: ElevatedButton.styleFrom(
-              padding: EdgeInsets.symmetric(horizontal: 40, vertical: 20),
+              padding:
+                  widget.padding ??
+                  EdgeInsets.symmetric(horizontal: 40, vertical: 20),
               backgroundColor: Colors.transparent,
-              foregroundColor: widget.onPressed != null ? Colors.white : Colors.grey.shade400, // Grey text when disabled
+              foregroundColor: widget.onPressed != null
+                  ? Colors.white
+                  : Colors.grey.shade400, // Grey text when disabled
               shadowColor: Colors.transparent,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(25),
@@ -171,8 +232,10 @@ class _AndroidButtonState extends State<_AndroidButton> with SingleTickerProvide
                 : Text(
                     widget.text,
                     style: TextStyle(
-                      color: widget.onPressed != null ? Colors.white : Colors.grey.shade400, // Grey text when disabled
-                      fontSize: 20,
+                      color: widget.onPressed != null
+                          ? Colors.white
+                          : Colors.grey.shade400, // Grey text when disabled
+                      fontSize: widget.fontSize ?? 20,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 1.2,
                     ),

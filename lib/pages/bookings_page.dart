@@ -1,4 +1,4 @@
-import 'dart:io' show Platform, SocketException;
+import 'dart:io' show Platform;
 import 'dart:async';
 
 import 'package:auto_revop/widgets/adaptive_button.dart';
@@ -424,22 +424,45 @@ class _BookingsPageState extends State<BookingsPage> {
       print('🔍 Exception type: ${e.runtimeType}');
 
       if (mounted) {
-        setState(() {
-          _isLoadingServices = false;
-          _isOffline = true; // Set offline state on error
-        });
-
-        // Handle specific exception types with user-friendly messages
-        String errorMessage = 'No internet connection. Please check and try again.';
-        if (e is SocketException) {
-          errorMessage = 'No internet connection. Please check and try again.';
-        } else if (e is TimeoutException) {
-          errorMessage = 'Connection timeout. Please check your internet and try again.';
-        } else if (e.toString().contains('No internet connection')) {
-          errorMessage = 'No internet connection. Please check and try again.';
+        // Handle ApiError specifically
+        if (e is ApiError) {
+          switch (e.type) {
+            case ApiErrorType.noInternet:
+              setState(() {
+                _isLoadingServices = false;
+                _isOffline = true;
+              });
+              _showErrorMessage('No internet connection. Please check and try again.');
+              break;
+            case ApiErrorType.timeout:
+              // For timeouts (likely cold starts), retry automatically after a delay
+              print('⏳ Timeout detected, retrying automatically...');
+              await Future.delayed(const Duration(seconds: 2));
+              if (mounted) {
+                setState(() {
+                  _isLoadingServices = true;
+                  _isOffline = false;
+                });
+                _fetchTowingServices(); // Recursive retry
+              }
+              break;
+            case ApiErrorType.serverError:
+            case ApiErrorType.unknown:
+              setState(() {
+                _isLoadingServices = false;
+                _isOffline = true;
+              });
+              _showErrorMessage('Unable to load services. Please try again.');
+              break;
+          }
+        } else {
+          // Fallback for non-ApiError exceptions
+          setState(() {
+            _isLoadingServices = false;
+            _isOffline = true;
+          });
+          _showErrorMessage('No internet connection. Please check and try again.');
         }
-
-        _showErrorMessage(errorMessage);
       }
     }
   }
@@ -599,17 +622,7 @@ class _BookingsPageState extends State<BookingsPage> {
       print('💥 Exception during towing booking: $e');
       print('🔍 Exception type: ${e.runtimeType}');
 
-      // Handle specific exception types with user-friendly messages
-      String errorMessage = 'No internet connection. Please check and try again.';
-      if (e is SocketException) {
-        errorMessage = 'No internet connection. Please check and try again.';
-      } else if (e is TimeoutException) {
-        errorMessage = 'Connection timeout. Please check your internet and try again.';
-      } else if (e.toString().contains('No internet connection')) {
-        errorMessage = 'No internet connection. Please check and try again.';
-      }
-
-      _showErrorMessage(errorMessage);
+      _showErrorMessage('Failed to book towing service. Please try again.');
     }
   }
 

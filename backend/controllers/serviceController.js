@@ -1,4 +1,5 @@
 const Service = require('../models/Service');
+const DetailingService = require('../models/DetailingService');
 
 // Get all services
 exports.getServices = async (req, res) => {
@@ -85,5 +86,73 @@ exports.deleteService = async (req, res) => {
     res.json({ message: 'Service deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: 'Error deleting service' });
+  }
+};
+
+// Detailing Service Controllers
+
+// Get detailing plan prices
+exports.getDetailingPlans = async (req, res) => {
+  try {
+    let detailingService = await DetailingService.findOne();
+    
+    // If no detailing service exists, create one with default values
+    if (!detailingService) {
+      detailingService = new DetailingService({
+        basicPrice: 5000,
+        standardPrice: 10000,
+        premiumPrice: 20000,
+        currency: 'RWF'
+      });
+      await detailingService.save();
+    }
+    
+    res.json({
+      basicPrice: detailingService.basicPrice,
+      standardPrice: detailingService.standardPrice,
+      premiumPrice: detailingService.premiumPrice,
+      currency: detailingService.currency,
+      basicDescription: detailingService.basicDescription,
+      standardDescription: detailingService.standardDescription,
+      premiumDescription: detailingService.premiumDescription
+    });
+  } catch (error) {
+    console.error('❌ Error fetching detailing plans:', error.message);
+    res.status(500).json({ message: 'Error fetching detailing plans', error: error.message });
+  }
+};
+
+// Update detailing plan prices
+exports.updateDetailingPlans = async (req, res) => {
+  try {
+    console.log('🔄 Updating detailing plans...');
+    console.log('📋 Update data:', JSON.stringify(req.body, null, 2));
+
+    let detailingService = await DetailingService.findOne();
+    
+    if (!detailingService) {
+      // Create new detailing service if none exists
+      detailingService = new DetailingService(req.body);
+    } else {
+      // Update existing detailing service
+      Object.assign(detailingService, req.body);
+    }
+    
+    await detailingService.save();
+    console.log('✅ Detailing plans updated successfully');
+    
+    res.json({
+      basicPrice: detailingService.basicPrice,
+      standardPrice: detailingService.standardPrice,
+      premiumPrice: detailingService.premiumPrice,
+      currency: detailingService.currency,
+      basicDescription: detailingService.basicDescription,
+      standardDescription: detailingService.standardDescription,
+      premiumDescription: detailingService.premiumDescription
+    });
+  } catch (error) {
+    console.error('❌ Error updating detailing plans:', error.message);
+    console.error('🔍 Error details:', error);
+    res.status(500).json({ message: 'Error updating detailing plans', error: error.message });
   }
 };

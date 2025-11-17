@@ -1,11 +1,32 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:connectivity_plus/connectivity_plus.dart';
 import '../utils/api_utils.dart';
 import '../models/service_model.dart';
 import '../models/spare_part_model.dart';
 import 'cache_service.dart';
+
+/// Error types for better error handling
+enum ApiErrorType {
+  noInternet,
+  timeout,
+  serverError,
+  unknown,
+}
+
+/// API error with type information
+class ApiError implements Exception {
+  final ApiErrorType type;
+  final String message;
+  final dynamic originalError;
+
+  ApiError(this.type, this.message, [this.originalError]);
+
+  @override
+  String toString() => message;
+}
 
 /// Optimized API service with caching, parallel loading, and performance enhancements
 class OptimizedApiService {
@@ -25,6 +46,52 @@ class OptimizedApiService {
   void dispose() {
     _cache.dispose();
     _pendingRequests.clear();
+  }
+
+  /// Make HTTP request with retry logic for cold starts
+  Future<http.Response> _makeRequestWithRetry(
+    String url, {
+    int maxRetries = 3,
+    Duration initialTimeout = const Duration(seconds: 30), // Longer for cold starts
+  }) async {
+    // Check connectivity first
+    final connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult == ConnectivityResult.none) {
+      throw ApiError(ApiErrorType.noInternet, 'No internet connection');
+    }
+
+    int attempt = 0;
+    Duration currentTimeout = initialTimeout;
+
+    while (attempt < maxRetries) {
+      attempt++;
+      print('🌐 Attempt $attempt/$maxRetries for $url (timeout: ${currentTimeout.inSeconds}s)');
+
+      try {
+        final response = await http.get(Uri.parse(url)).timeout(currentTimeout);
+        return response;
+      } on TimeoutException catch (e) {
+        if (attempt >= maxRetries) {
+          throw ApiError(ApiErrorType.timeout, 'Connection timeout after $maxRetries attempts', e);
+        }
+        // Exponential backoff: wait before retry
+        final waitTime = Duration(seconds: attempt * 2);
+        print('⏳ Timeout, waiting ${waitTime.inSeconds}s before retry...');
+        await Future.delayed(waitTime);
+        // Increase timeout for next attempt
+        currentTimeout = Duration(seconds: currentTimeout.inSeconds + 10);
+      } on SocketException catch (e) {
+        throw ApiError(ApiErrorType.noInternet, 'No internet connection', e);
+      } catch (e) {
+        if (attempt >= maxRetries) {
+          throw ApiError(ApiErrorType.unknown, 'Network error: ${e.toString()}', e);
+        }
+        // For other errors, retry after short delay
+        await Future.delayed(const Duration(seconds: 1));
+      }
+    }
+
+    throw ApiError(ApiErrorType.unknown, 'Request failed after $maxRetries attempts');
   }
 
   /// Fetch towing services with caching
@@ -53,15 +120,7 @@ class OptimizedApiService {
       print('🔄 Fetching towing services from API...');
       final url = '${getApiBaseUrl()}/api/services/type/towing';
 
-      // Check connectivity
-      final connectivityResult = await Connectivity().checkConnectivity();
-      if (connectivityResult == ConnectivityResult.none) {
-        throw Exception('No internet connection');
-      }
-
-      final response = await http.get(Uri.parse(url)).timeout(
-        const Duration(seconds: 15),
-      );
+      final response = await _makeRequestWithRetry(url);
 
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
@@ -74,7 +133,7 @@ class OptimizedApiService {
         completer.complete(services);
         return services;
       } else {
-        throw Exception('Failed to load towing services: ${response.statusCode}');
+        throw ApiError(ApiErrorType.serverError, 'Failed to load towing services: ${response.statusCode}');
       }
     } catch (e) {
       print('❌ Error fetching towing services: $e');
@@ -111,14 +170,7 @@ class OptimizedApiService {
       print('🔄 Fetching mechanic services from API...');
       final url = '${getApiBaseUrl()}/api/services/type/mechanic';
 
-      final connectivityResult = await Connectivity().checkConnectivity();
-      if (connectivityResult == ConnectivityResult.none) {
-        throw Exception('No internet connection');
-      }
-
-      final response = await http.get(Uri.parse(url)).timeout(
-        const Duration(seconds: 15),
-      );
+      final response = await _makeRequestWithRetry(url);
 
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
@@ -131,7 +183,7 @@ class OptimizedApiService {
         completer.complete(services);
         return services;
       } else {
-        throw Exception('Failed to load mechanic services: ${response.statusCode}');
+        throw ApiError(ApiErrorType.serverError, 'Failed to load mechanic services: ${response.statusCode}');
       }
     } catch (e) {
       print('❌ Error fetching mechanic services: $e');
@@ -176,14 +228,7 @@ class OptimizedApiService {
         url += '&search=$search';
       }
 
-      final connectivityResult = await Connectivity().checkConnectivity();
-      if (connectivityResult == ConnectivityResult.none) {
-        throw Exception('No internet connection');
-      }
-
-      final response = await http.get(Uri.parse(url)).timeout(
-        const Duration(seconds: 15),
-      );
+      final response = await _makeRequestWithRetry(url);
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = json.decode(response.body);
@@ -197,7 +242,7 @@ class OptimizedApiService {
         completer.complete(parts);
         return parts;
       } else {
-        throw Exception('Failed to load spare parts: ${response.statusCode}');
+        throw ApiError(ApiErrorType.serverError, 'Failed to load spare parts: ${response.statusCode}');
       }
     } catch (e) {
       print('❌ Error fetching spare parts: $e');
@@ -234,14 +279,7 @@ class OptimizedApiService {
       print('🔄 Fetching all spare parts from API...');
       final url = '${getApiBaseUrl()}/api/spare-parts?limit=1000'; // Large limit for search
 
-      final connectivityResult = await Connectivity().checkConnectivity();
-      if (connectivityResult == ConnectivityResult.none) {
-        throw Exception('No internet connection');
-      }
-
-      final response = await http.get(Uri.parse(url)).timeout(
-        const Duration(seconds: 20), // Longer timeout for large data
-      );
+      final response = await _makeRequestWithRetry(url, initialTimeout: const Duration(seconds: 45)); // Longer for large data
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = json.decode(response.body);
@@ -255,7 +293,7 @@ class OptimizedApiService {
         completer.complete(allParts);
         return allParts;
       } else {
-        throw Exception('Failed to load all spare parts: ${response.statusCode}');
+        throw ApiError(ApiErrorType.serverError, 'Failed to load all spare parts: ${response.statusCode}');
       }
     } catch (e) {
       print('❌ Error fetching all spare parts: $e');

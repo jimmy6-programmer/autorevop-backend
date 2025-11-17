@@ -8,7 +8,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Search, Wrench, Truck, Plus, Edit, Trash2, Eye, Filter, DollarSign, Loader2, Save, X } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Search, Wrench, Truck, Plus, Edit, Trash2, Eye, Filter, DollarSign, Loader2, Save, X, Car } from 'lucide-react';
+import DetailingServiceManager from './DetailingServiceManager';
 
 interface Service {
   _id: string;
@@ -186,8 +188,21 @@ export default function ServicesPage() {
   };
 
   return (
-    <>
-      <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm animate-in slide-in-from-bottom-4 fade-in">
+    <div className="space-y-6">
+      <Tabs defaultValue="regular-services" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="regular-services" className="flex items-center space-x-2">
+            <Wrench size={16} />
+            <span>Regular Services</span>
+          </TabsTrigger>
+          <TabsTrigger value="detailing-services" className="flex items-center space-x-2">
+            <Car size={16} />
+            <span>Detailing Services</span>
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="regular-services" className="mt-6">
+          <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm animate-in slide-in-from-bottom-4 fade-in">
         <CardHeader>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
             <CardTitle className="flex items-center space-x-2">
@@ -449,7 +464,13 @@ export default function ServicesPage() {
             </div>
           )}
         </DialogContent>
-      </Dialog>
-    </>
+          </Dialog>
+        </TabsContent>
+
+        <TabsContent value="detailing-services" className="mt-6">
+          <DetailingServiceManager />
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }

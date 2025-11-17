@@ -1,4 +1,4 @@
-import 'dart:io' show Platform, SocketException;
+import 'dart:io' show Platform;
 import 'dart:async';
 import 'package:auto_revop/models/spare_part_model.dart';
 import 'package:auto_revop/models/cart_item_model.dart';
@@ -74,24 +74,42 @@ class _SparePartsPageState extends State<SparePartsPage> {
       }
     } catch (e) {
       if (mounted) {
-        setState(() {
-          // Handle specific exception types with user-friendly messages
-          String errorMessage =
-              'No internet connection. Please check and try again.';
-          if (e is SocketException) {
-            errorMessage =
-                'No internet connection. Please check and try again.';
-          } else if (e is TimeoutException) {
-            errorMessage =
-                'Connection timeout. Please check your internet and try again.';
-          } else if (e.toString().contains('No internet connection')) {
-            errorMessage =
-                'No internet connection. Please check and try again.';
+        // Handle ApiError specifically
+        if (e is ApiError) {
+          switch (e.type) {
+            case ApiErrorType.noInternet:
+              setState(() {
+                _error = 'No internet connection. Please check and try again.';
+                _isLoading = false;
+              });
+              break;
+            case ApiErrorType.timeout:
+              // For timeouts (likely cold starts), retry automatically after a delay
+              print('⏳ Timeout detected, retrying automatically...');
+              await Future.delayed(const Duration(seconds: 2));
+              if (mounted) {
+                setState(() {
+                  _error = null;
+                  _isLoading = true;
+                });
+                _fetchInventory(); // Recursive retry
+              }
+              break;
+            case ApiErrorType.serverError:
+            case ApiErrorType.unknown:
+              setState(() {
+                _error = 'Unable to load spare parts. Please try again.';
+                _isLoading = false;
+              });
+              break;
           }
-
-          _error = errorMessage;
-          _isLoading = false;
-        });
+        } else {
+          // Fallback for non-ApiError exceptions
+          setState(() {
+            _error = 'No internet connection. Please check and try again.';
+            _isLoading = false;
+          });
+        }
       }
     }
   }
@@ -115,6 +133,15 @@ class _SparePartsPageState extends State<SparePartsPage> {
   @override
   Widget build(BuildContext context) {
     final localeProvider = Provider.of<LocaleProvider>(context);
+
+    // Responsive grid columns
+    final screenWidth = MediaQuery.of(context).size.width;
+    final desiredColumns = screenWidth >= 1200
+        ? 4
+        : screenWidth >= 768
+        ? 3
+        : 2;
+    final maxCrossAxisExtent = screenWidth / desiredColumns - 16.0;
 
     return Platform.isIOS
         ? CupertinoPageScaffold(
@@ -170,7 +197,14 @@ class _SparePartsPageState extends State<SparePartsPage> {
                               ],
                             ),
                           )
-                        : ListView.builder(
+                        : GridView.builder(
+                            padding: const EdgeInsets.all(16.0),
+                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: desiredColumns,
+                              crossAxisSpacing: 16.0,
+                              mainAxisSpacing: 20.0,
+                              childAspectRatio: desiredColumns == 2 ? 0.75 : desiredColumns == 3 ? 0.8 : 0.85,
+                            ),
                             itemCount: _filteredSpareParts.length,
                             itemBuilder: (context, index) {
                               final part = _filteredSpareParts[index];
@@ -237,7 +271,14 @@ class _SparePartsPageState extends State<SparePartsPage> {
                             ],
                           ),
                         )
-                      : ListView.builder(
+                      : GridView.builder(
+                          padding: const EdgeInsets.all(16.0),
+                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: desiredColumns,
+                            crossAxisSpacing: 16.0,
+                            mainAxisSpacing: 20.0,
+                            childAspectRatio: desiredColumns == 2 ? 0.75 : desiredColumns == 3 ? 0.8 : 0.85,
+                          ),
                           itemCount: _filteredSpareParts.length,
                           itemBuilder: (context, index) {
                             final part = _filteredSpareParts[index];
@@ -252,13 +293,12 @@ class _SparePartsPageState extends State<SparePartsPage> {
 
   Widget _buildSparePartCard(SparePart part) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       decoration: BoxDecoration(
         color: CupertinoColors.white,
         borderRadius: BorderRadius.circular(12.0),
         boxShadow: [
           BoxShadow(
-            color: CupertinoColors.black.withOpacity(0.1),
+            color: Color.fromRGBO(0, 0, 0, 0.1),
             blurRadius: 8.0,
             offset: const Offset(0, 2),
           ),
@@ -267,134 +307,131 @@ class _SparePartsPageState extends State<SparePartsPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            height: 350,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(12.0),
-              ),
-              image: DecorationImage(
-                image: NetworkImage(part.image),
+          // Image section - takes up about 60% of the card
+          Expanded(
+            flex: 3,
+            child: ClipRRect(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(12.0)),
+              child: Image.network(
+                part.image,
                 fit: BoxFit.cover,
+                width: double.infinity,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    color: Colors.grey[200],
+                    child: const Icon(
+                      Icons.image_not_supported,
+                      color: Colors.grey,
+                      size: 40,
+                    ),
+                  );
+                },
               ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        part.name,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: CupertinoColors.black,
-                        ),
-                      ),
-                    ),
-                    Text(
-                      part.category,
-                      style: TextStyle(
+          // Content section - takes up about 40% of the card
+          Expanded(
+            flex: 2,
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Product name - flexible to prevent overflow
+                  Flexible(
+                    child: Text(
+                      part.name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
                         fontSize: 12,
-                        color: CupertinoColors.activeBlue,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.bold,
+                        color: CupertinoColors.black,
                       ),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  part.description,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: CupertinoColors.systemGrey,
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '\$${part.price.toStringAsFixed(2)}',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: CupertinoColors.systemRed,
+                  const SizedBox(height: 4),
+                  // Price
+                  Text(
+                    '\$${part.price.toStringAsFixed(2)}',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: CupertinoColors.systemRed,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                Consumer<CartProvider>(
-                  builder: (context, cartProvider, child) {
-                    final isInCart = cartProvider.isInCart(part.id);
-                    return Center(
-                      child: widgets.adaptiveButton(
-                        isInCart
-                            ? Provider.of<LocaleProvider>(
-                                context,
-                              ).translate('Added To Cart')
-                            : Provider.of<LocaleProvider>(
-                                context,
-                              ).translate('Add To Cart'),
-                        isInCart
-                            ? null
-                            : () async {
-                                // Check authentication before adding to cart
-                                final isAuthenticated =
-                                    await AuthUtils.checkAuthAndRedirect(
-                                      context,
-                                      {},
+                  const Spacer(),
+                  // Add to cart button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 32,
+                    child: Consumer<CartProvider>(
+                      builder: (context, cartProvider, child) {
+                        final isInCart = cartProvider.isInCart(part.id);
+                        return widgets.adaptiveButton(
+                          isInCart
+                              ? Provider.of<LocaleProvider>(context).translate('Added To Cart')
+                              : Provider.of<LocaleProvider>(context).translate('Add To Cart'),
+                          isInCart
+                              ? null
+                              : () async {
+                                  final isAuthenticated =
+                                      await AuthUtils.checkAuthAndRedirect(
+                                        context,
+                                        {},
+                                      );
+                                  if (isAuthenticated) {
+                                    final cartItem = CartItem(
+                                      id: DateTime.now().millisecondsSinceEpoch.toString(),
+                                      productId: part.id,
+                                      name: part.name,
+                                      description: part.description,
+                                      image: part.image,
+                                      price: part.price,
                                     );
-                                if (isAuthenticated) {
-                                  final cartItem = CartItem(
-                                    id: DateTime.now().millisecondsSinceEpoch
-                                        .toString(),
-                                    productId: part.id,
-                                    name: part.name,
-                                    description: part.description,
-                                    image: part.image,
-                                    price: part.price,
-                                  );
-                                  cartProvider.addItem(cartItem);
-
-                                  // Show snackbar feedback
-                                  if (Platform.isIOS) {
-                                    showCupertinoDialog(
-                                      context: context,
-                                      builder: (BuildContext context) {
-                                        return CupertinoAlertDialog(
-                                          title: Text('Added to Cart'),
-                                          content: Text(
-                                            '${part.name} has been added to your cart.',
-                                          ),
-                                          actions: [
-                                            CupertinoDialogAction(
-                                              child: Text('OK'),
-                                              onPressed: () =>
-                                                  Navigator.of(context).pop(),
+                                    cartProvider.addItem(cartItem);
+                                    if (Platform.isIOS) {
+                                      showCupertinoDialog(
+                                        context: context,
+                                        builder: (BuildContext context) {
+                                          return CupertinoAlertDialog(
+                                            title: const Text('Added to Cart'),
+                                            content: Text(
+                                              '${part.name} has been added to your cart.',
                                             ),
-                                          ],
-                                        );
-                                      },
-                                    );
-                                  } else {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          '${part.name} added to cart',
+                                            actions: [
+                                              CupertinoDialogAction(
+                                                child: const Text('OK'),
+                                                onPressed: () =>
+                                                    Navigator.of(context).pop(),
+                                              ),
+                                            ],
+                                          );
+                                        },
+                                      );
+                                    } else {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            '${part.name} added to cart',
+                                          ),
+                                          duration: const Duration(seconds: 2),
                                         ),
-                                        duration: const Duration(seconds: 2),
-                                      ),
-                                    );
+                                      );
+                                    }
                                   }
-                                }
-                              },
-                      ),
-                    );
-                  },
-                ),
-              ],
+                                },
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          fontSize: 10,
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
