@@ -71,6 +71,18 @@ export default function DetailingServiceManager() {
   const handleSave = async () => {
     try {
       setSaving(true);
+
+      console.log('🔄 [FRONTEND] Starting detailing plans update...');
+      console.log('📤 [FRONTEND] Request data:', {
+        url: 'https://autorevop-backend.onrender.com/api/services/detailing-plans',
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('adminToken') ? '[PRESENT]' : '[MISSING]'}`,
+        },
+        body: plans
+      });
+
       const response = await fetch('https://autorevop-backend.onrender.com/api/services/detailing-plans', {
         method: 'PUT',
         headers: {
@@ -80,13 +92,34 @@ export default function DetailingServiceManager() {
         body: JSON.stringify(plans),
       });
 
-      if (!response.ok) throw new Error('Failed to update detailing plans');
+      console.log('📥 [FRONTEND] Response received:', {
+        status: response.status,
+        statusText: response.statusText,
+        headers: Object.fromEntries(response.headers.entries()),
+        ok: response.ok
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ [FRONTEND] Response not OK:', {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorText
+        });
+        throw new Error(`Failed to update detailing plans: ${response.status} ${response.statusText}`);
+      }
 
       const updatedPlans = await response.json();
+      console.log('✅ [FRONTEND] Update successful! Response data:', updatedPlans);
+
       setPlans(updatedPlans);
       alert('Detailing plans updated successfully!');
     } catch (err) {
-      console.error('Error updating detailing plans:', err);
+      console.error('❌ [FRONTEND] Error updating detailing plans:', {
+        error: err,
+        message: err.message,
+        stack: err.stack
+      });
       alert('Failed to update detailing plans');
     } finally {
       setSaving(false);
