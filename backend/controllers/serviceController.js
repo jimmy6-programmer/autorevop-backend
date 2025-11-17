@@ -151,49 +151,21 @@ exports.updateDetailingPlans = async (req, res) => {
     console.log('🔄 Updating detailing plans...');
     console.log('📋 Update data:', JSON.stringify(req.body, null, 2));
 
-    // Validate required fields
-    const { basicPrice, standardPrice, premiumPrice, basicDescription, standardDescription, premiumDescription } = req.body;
-
-    if (basicPrice === undefined || standardPrice === undefined || premiumPrice === undefined) {
-      return res.status(400).json({
-        success: false,
-        message: 'Missing required price fields'
-      });
-    }
-
-    // Ensure prices are valid numbers
-    const parsedBasicPrice = parseFloat(basicPrice);
-    const parsedStandardPrice = parseFloat(standardPrice);
-    const parsedPremiumPrice = parseFloat(premiumPrice);
-
-    if (isNaN(parsedBasicPrice) || isNaN(parsedStandardPrice) || isNaN(parsedPremiumPrice)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid price values - must be numbers'
-      });
-    }
-
-    // Prepare update data
-    const updateData = {
-      basicPrice: parsedBasicPrice,
-      standardPrice: parsedStandardPrice,
-      premiumPrice: parsedPremiumPrice,
-      currency: 'USD',
-      basicDescription: basicDescription || 'Exterior cleaning only',
-      standardDescription: standardDescription || 'Exterior + interior cleaning',
-      premiumDescription: premiumDescription || 'Full detailing (exterior, interior, waxing, vacuuming, polishing, etc.)'
-    };
+    // Ensure prices are numbers and currency is USD
+    req.body.basicPrice = parseFloat(req.body.basicPrice) || 0;
+    req.body.standardPrice = parseFloat(req.body.standardPrice) || 0;
+    req.body.premiumPrice = parseFloat(req.body.premiumPrice) || 0;
+    req.body.currency = 'USD';
 
     const detailingService = await DetailingService.findOneAndUpdate(
       {},
-      updateData,
-      { new: true, upsert: true, runValidators: true }
+      req.body,
+      { new: true, upsert: true }
     );
 
     console.log('✅ Detailing plans updated successfully');
 
     res.json({
-      success: true,
       basicPrice: detailingService.basicPrice,
       standardPrice: detailingService.standardPrice,
       premiumPrice: detailingService.premiumPrice,
@@ -205,10 +177,6 @@ exports.updateDetailingPlans = async (req, res) => {
   } catch (error) {
     console.error('❌ Error updating detailing plans:', error.message);
     console.error('🔍 Error details:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error updating detailing plans',
-      error: error.message
-    });
+    res.status(500).json({ message: 'Error updating detailing plans', error: error.message });
   }
 };
