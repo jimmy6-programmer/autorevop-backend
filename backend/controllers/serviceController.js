@@ -94,31 +94,54 @@ exports.deleteService = async (req, res) => {
 // Get detailing plan prices
 exports.getDetailingPlans = async (req, res) => {
   try {
+    console.log('🔄 Fetching detailing plans...');
+    
+    // Check if DetailingService model is properly imported
+    if (!DetailingService) {
+      console.error('❌ DetailingService model not found');
+      return res.status(500).json({ message: 'DetailingService model not available' });
+    }
+    
     let detailingService = await DetailingService.findOne();
+    console.log('📋 Found detailing service:', detailingService ? 'Yes' : 'No');
     
     // If no detailing service exists, create one with default values
     if (!detailingService) {
+      console.log('🔄 Creating default detailing service...');
       detailingService = new DetailingService({
         basicPrice: 5000,
         standardPrice: 10000,
         premiumPrice: 20000,
-        currency: 'RWF'
+        currency: 'RWF',
+        basicDescription: 'Exterior cleaning only',
+        standardDescription: 'Exterior + interior cleaning',
+        premiumDescription: 'Full detailing (exterior, interior, waxing, vacuuming, polishing, etc.)'
       });
       await detailingService.save();
+      console.log('✅ Default detailing service created');
     }
     
-    res.json({
-      basicPrice: detailingService.basicPrice,
-      standardPrice: detailingService.standardPrice,
-      premiumPrice: detailingService.premiumPrice,
-      currency: detailingService.currency,
-      basicDescription: detailingService.basicDescription,
-      standardDescription: detailingService.standardDescription,
-      premiumDescription: detailingService.premiumDescription
-    });
+    const response = {
+      success: true,
+      basicPrice: detailingService.basicPrice || 5000,
+      standardPrice: detailingService.standardPrice || 10000,
+      premiumPrice: detailingService.premiumPrice || 20000,
+      currency: detailingService.currency || 'RWF',
+      basicDescription: detailingService.basicDescription || 'Exterior cleaning only',
+      standardDescription: detailingService.standardDescription || 'Exterior + interior cleaning',
+      premiumDescription: detailingService.premiumDescription || 'Full detailing (exterior, interior, waxing, vacuuming, polishing, etc.)'
+    };
+    
+    console.log('✅ Returning detailing plans:', JSON.stringify(response, null, 2));
+    res.json(response);
   } catch (error) {
     console.error('❌ Error fetching detailing plans:', error.message);
-    res.status(500).json({ message: 'Error fetching detailing plans', error: error.message });
+    console.error('🔍 Full error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching detailing plans',
+      error: error.message
+    });
   }
 };
 

@@ -20,6 +20,7 @@ app.use((req, res, next) => {
 const SparePart = require('./models/SparePart');
 const Admin = require('./models/Admin');
 const Service = require('./models/Service');
+const DetailingService = require('./models/DetailingService');
 
 // Database connection
 mongoose.connect(process.env.MONGO_URI)
@@ -28,6 +29,7 @@ mongoose.connect(process.env.MONGO_URI)
   seedInitialData();
   seedDefaultAdmin();
   seedInitialServices();
+  seedDetailingService();
 })
 .catch(err => console.log(err));
 
@@ -237,6 +239,28 @@ async function seedInitialServices() {
     }
   } catch (error) {
     console.error('Error seeding initial services:', error);
+  }
+}
+
+// Seed detailing service
+async function seedDetailingService() {
+  try {
+    const count = await DetailingService.countDocuments();
+    if (count === 0) {
+      const defaultDetailingService = new DetailingService({
+        basicPrice: 5000,
+        standardPrice: 10000,
+        premiumPrice: 20000,
+        currency: 'RWF',
+        basicDescription: 'Exterior cleaning only',
+        standardDescription: 'Exterior + interior cleaning',
+        premiumDescription: 'Full detailing (exterior, interior, waxing, vacuuming, polishing, etc.)'
+      });
+      await defaultDetailingService.save();
+      console.log('Default detailing service created');
+    }
+  } catch (error) {
+    console.error('Error seeding detailing service:', error);
   }
 }
 

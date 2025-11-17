@@ -45,7 +45,23 @@ export default function DetailingServiceManager() {
       });
       if (!response.ok) throw new Error('Failed to fetch detailing plans');
       const data = await response.json();
-      setPlans(data);
+      
+      // Handle both old and new response formats
+      if (data.success !== undefined) {
+        // New format with success field
+        setPlans({
+          basicPrice: data.basicPrice,
+          standardPrice: data.standardPrice,
+          premiumPrice: data.premiumPrice,
+          currency: data.currency,
+          basicDescription: data.basicDescription,
+          standardDescription: data.standardDescription,
+          premiumDescription: data.premiumDescription
+        });
+      } else {
+        // Old format (direct data)
+        setPlans(data);
+      }
       setError(null);
     } catch (err) {
       setError('Failed to load detailing plans');
