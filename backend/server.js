@@ -24,14 +24,25 @@ const DetailingService = require('./models/DetailingService');
 
 // Database connection
 mongoose.connect(process.env.DATABASE_URL)
-.then(() => {
+.then(async () => {
   console.log('MongoDB connected');
-  seedInitialData();
-  seedDefaultAdmin();
-  seedInitialServices();
-  seedDetailingService();
+
+  // Run seeding operations in parallel for faster startup
+  try {
+    await Promise.all([
+      seedInitialData(),
+      seedDefaultAdmin(),
+      seedInitialServices(),
+      seedDetailingService()
+    ]);
+    console.log('All seeding operations completed');
+  } catch (error) {
+    console.error('Error during seeding:', error);
+  }
+
+  console.log('Server startup complete');
 })
-.catch(err => console.log(err));
+.catch(err => console.log('MongoDB connection error:', err));
 
 // Seed initial data
 async function seedInitialData() {
