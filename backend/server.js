@@ -23,7 +23,7 @@ const Service = require('./models/Service');
 const DetailingService = require('./models/DetailingService');
 
 // Database connection
-mongoose.connect(process.env.MONGO_URI)
+mongoose.connect(process.env.DATABASE_URL)
 .then(() => {
   console.log('MongoDB connected');
   seedInitialData();
