@@ -34,16 +34,13 @@ class _DetailingPageState extends State<DetailingPage> {
     'SUV/Crossover',
   ];
 
-  final List<String> _planTypes = [
-    'Basic',
-    'Standard',
-    'Premium'
-  ];
+  final List<String> _planTypes = ['Basic', 'Standard', 'Premium'];
 
   final Map<String, String> _planDescriptions = {
     'Basic': 'Exterior cleaning only',
     'Standard': 'Exterior + interior cleaning',
-    'Premium': 'Full detailing (exterior, interior, waxing, vacuuming, polishing, etc.)',
+    'Premium':
+        'Full detailing (exterior, interior, waxing, vacuuming, polishing, etc.)',
   };
 
   final Map<String, double> _exchangeRates = {
@@ -118,9 +115,9 @@ class _DetailingPageState extends State<DetailingPage> {
 
   bool get _isFormValid {
     return _phoneController.text.trim().isNotEmpty &&
-           _locationController.text.trim().isNotEmpty &&
-           _selectedVehicleType != null &&
-           _selectedPlanType != null;
+        _locationController.text.trim().isNotEmpty &&
+        _selectedVehicleType != null &&
+        _selectedPlanType != null;
   }
 
   @override
@@ -136,7 +133,7 @@ class _DetailingPageState extends State<DetailingPage> {
     try {
       final url = '${getApiBaseUrl()}/api/services/detailing-plans';
       final response = await http.get(Uri.parse(url));
-      
+
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         setState(() {
@@ -173,10 +170,12 @@ class _DetailingPageState extends State<DetailingPage> {
 
     final detailingData = {
       'type': 'detailing',
-      'fullName': 'Customer', // Add a default name since detailing doesn't require name
+      'fullName':
+          'Customer', // Add a default name since detailing doesn't require name
       'phoneNumber': _phoneController.text,
       'vehicleType': _selectedVehicleType,
-      'serviceType': _selectedPlanType, // Changed from 'planType' to 'serviceType'
+      'serviceType':
+          _selectedPlanType, // Changed from 'planType' to 'serviceType'
       'location': _locationController.text,
       'totalPrice': _convertedPrice.toStringAsFixed(2),
       'currency': _selectedCurrency,
@@ -206,7 +205,9 @@ class _DetailingPageState extends State<DetailingPage> {
             builder: (BuildContext context) {
               return CupertinoAlertDialog(
                 title: Text('Success!'),
-                content: Text('Detailing service request submitted successfully. We will contact you soon.'),
+                content: Text(
+                  'Detailing service request submitted successfully. We will contact you soon.',
+                ),
                 actions: [
                   CupertinoDialogAction(
                     child: Text('OK'),
@@ -223,7 +224,8 @@ class _DetailingPageState extends State<DetailingPage> {
             backgroundColor: Colors.transparent,
             content: AwesomeSnackbarContent(
               title: 'Success!',
-              message: 'Detailing service request submitted successfully. We will contact you soon.',
+              message:
+                  'Detailing service request submitted successfully. We will contact you soon.',
               contentType: ContentType.success,
             ),
           );
@@ -236,7 +238,9 @@ class _DetailingPageState extends State<DetailingPage> {
             builder: (BuildContext context) {
               return CupertinoAlertDialog(
                 title: Text('Error'),
-                content: Text('Failed to submit detailing request. Please try again.'),
+                content: Text(
+                  'Failed to submit detailing request. Please try again.',
+                ),
                 actions: [
                   CupertinoDialogAction(
                     child: Text('OK'),
@@ -267,7 +271,9 @@ class _DetailingPageState extends State<DetailingPage> {
           builder: (BuildContext context) {
             return CupertinoAlertDialog(
               title: Text('Error'),
-              content: Text('Network error. Please check your connection and try again.'),
+              content: Text(
+                'Network error. Please check your connection and try again.',
+              ),
               actions: [
                 CupertinoDialogAction(
                   child: Text('OK'),
@@ -284,7 +290,8 @@ class _DetailingPageState extends State<DetailingPage> {
           backgroundColor: Colors.transparent,
           content: AwesomeSnackbarContent(
             title: 'Error',
-            message: 'Network error. Please check your connection and try again.',
+            message:
+                'Network error. Please check your connection and try again.',
             contentType: ContentType.failure,
           ),
         );
@@ -435,14 +442,21 @@ class _DetailingPageState extends State<DetailingPage> {
                           CupertinoTextField(
                             controller: _phoneController,
                             placeholder: 'Enter your phone number',
-                            placeholderStyle: TextStyle(color: CupertinoColors.systemGrey), // Black placeholder
-                            style: TextStyle(color: CupertinoColors.black), // Black input text
+                            placeholderStyle: TextStyle(
+                              color: CupertinoColors.systemGrey,
+                            ), // Black placeholder
+                            style: TextStyle(
+                              color: CupertinoColors.black,
+                            ), // Black input text
                             keyboardType: TextInputType.phone,
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
-                              color: CupertinoColors.white, // White background for dark mode
+                              color: CupertinoColors
+                                  .white, // White background for dark mode
                               borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: CupertinoColors.systemGrey),
+                              border: Border.all(
+                                color: CupertinoColors.systemGrey,
+                              ),
                             ),
                           ),
                           const SizedBox(height: 20),
@@ -469,19 +483,29 @@ class _DetailingPageState extends State<DetailingPage> {
                             child: Container(
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: CupertinoColors.white, // White background for dark mode
+                                color: CupertinoColors
+                                    .white, // White background for dark mode
                                 borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: CupertinoColors.systemGrey4),
+                                border: Border.all(
+                                  color: CupertinoColors.systemGrey4,
+                                ),
                               ),
                               child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
-                                    _selectedVehicleType ?? localeProvider.translate('selectVehicleType'),
+                                    _selectedVehicleType ??
+                                        localeProvider.translate(
+                                          'selectVehicleType',
+                                        ),
                                     style: TextStyle(
                                       color: _selectedVehicleType != null
-                                          ? CupertinoColors.black // Black text for selected
-                                          : CupertinoColors.black.withOpacity(0.6), // Black placeholder
+                                          ? CupertinoColors
+                                                .black // Black text for selected
+                                          : CupertinoColors.black.withOpacity(
+                                              0.6,
+                                            ), // Black placeholder
                                     ),
                                   ),
                                   Icon(
@@ -494,7 +518,7 @@ class _DetailingPageState extends State<DetailingPage> {
                           ),
                           const SizedBox(height: 20),
                           Text(
-                            'Plan Type',
+                            localeProvider.translate('planType'),
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
@@ -516,19 +540,26 @@ class _DetailingPageState extends State<DetailingPage> {
                             child: Container(
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: CupertinoColors.white, // White background for dark mode
+                                color: CupertinoColors
+                                    .white, // White background for dark mode
                                 borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: CupertinoColors.systemGrey4),
+                                border: Border.all(
+                                  color: CupertinoColors.systemGrey4,
+                                ),
                               ),
                               child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
-                                    _selectedPlanType ?? 'Select Plan Type',
+                                    _selectedPlanType ?? localeProvider.translate('selectPlanType'),
                                     style: TextStyle(
                                       color: _selectedPlanType != null
-                                          ? CupertinoColors.black // Black text for selected
-                                          : CupertinoColors.black.withOpacity(0.6), // Black placeholder
+                                          ? CupertinoColors
+                                                .black // Black text for selected
+                                          : CupertinoColors.black.withOpacity(
+                                              0.6,
+                                            ), // Black placeholder
                                     ),
                                   ),
                                   Icon(
@@ -547,7 +578,9 @@ class _DetailingPageState extends State<DetailingPage> {
                               decoration: BoxDecoration(
                                 color: CupertinoColors.systemGrey6,
                                 borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: CupertinoColors.systemGrey4),
+                                border: Border.all(
+                                  color: CupertinoColors.systemGrey4,
+                                ),
                               ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -578,15 +611,22 @@ class _DetailingPageState extends State<DetailingPage> {
                             Container(
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: CupertinoColors.systemBlue.withOpacity(0.1),
+                                color: CupertinoColors.systemBlue.withOpacity(
+                                  0.1,
+                                ),
                                 borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: CupertinoColors.systemBlue.withOpacity(0.3)),
+                                border: Border.all(
+                                  color: CupertinoColors.systemBlue.withOpacity(
+                                    0.3,
+                                  ),
+                                ),
                               ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
                                     children: [
                                       Text(
                                         'Cost',
@@ -597,11 +637,18 @@ class _DetailingPageState extends State<DetailingPage> {
                                         ),
                                       ),
                                       Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 4,
+                                        ),
                                         decoration: BoxDecoration(
                                           color: CupertinoColors.white,
-                                          borderRadius: BorderRadius.circular(6),
-                                          border: Border.all(color: CupertinoColors.systemGrey4),
+                                          borderRadius: BorderRadius.circular(
+                                            6,
+                                          ),
+                                          border: Border.all(
+                                            color: CupertinoColors.systemGrey4,
+                                          ),
                                         ),
                                         child: GestureDetector(
                                           onTap: () => _showCupertinoPicker(
@@ -628,7 +675,8 @@ class _DetailingPageState extends State<DetailingPage> {
                                               Icon(
                                                 CupertinoIcons.chevron_down,
                                                 size: 16,
-                                                color: CupertinoColors.systemGrey,
+                                                color:
+                                                    CupertinoColors.systemGrey,
                                               ),
                                             ],
                                           ),
@@ -661,14 +709,23 @@ class _DetailingPageState extends State<DetailingPage> {
                           const SizedBox(height: 8),
                           CupertinoTextField(
                             controller: _locationController,
-                            placeholder: localeProvider.translate('enterServiceLocation'),
-                            placeholderStyle: TextStyle(color: CupertinoColors.systemGrey), // Black placeholder
-                            style: TextStyle(color: CupertinoColors.black), // Black input text
+                            placeholder: localeProvider.translate(
+                              'enterServiceLocation',
+                            ),
+                            placeholderStyle: TextStyle(
+                              color: CupertinoColors.systemGrey,
+                            ), // Black placeholder
+                            style: TextStyle(
+                              color: CupertinoColors.black,
+                            ), // Black input text
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
-                              color: CupertinoColors.white, // White background for dark mode
+                              color: CupertinoColors
+                                  .white, // White background for dark mode
                               borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: CupertinoColors.systemGrey),
+                              border: Border.all(
+                                color: CupertinoColors.systemGrey,
+                              ),
                             ),
                           ),
                           const SizedBox(height: 30),
@@ -757,24 +814,36 @@ class _DetailingPageState extends State<DetailingPage> {
                           const SizedBox(height: 8),
                           TextField(
                             controller: _phoneController,
-                            style: TextStyle(color: Colors.black), // Black input text
+                            style: TextStyle(
+                              color: Colors.black,
+                            ), // Black input text
                             decoration: InputDecoration(
                               hintText: 'Enter your phone number',
-                              hintStyle: TextStyle(color: Colors.black.withOpacity(0.6)), // Black placeholder
+                              hintStyle: TextStyle(
+                                color: Colors.black.withOpacity(0.6),
+                              ), // Black placeholder
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide(color: Colors.grey.shade300),
+                                borderSide: BorderSide(
+                                  color: Colors.grey.shade300,
+                                ),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide(color: Colors.grey.shade300),
+                                borderSide: BorderSide(
+                                  color: Colors.grey.shade300,
+                                ),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide(color: Colors.blue, width: 2),
+                                borderSide: BorderSide(
+                                  color: Colors.blue,
+                                  width: 2,
+                                ),
                               ),
                               filled: true,
-                              fillColor: Colors.white, // White background for dark mode
+                              fillColor: Colors
+                                  .white, // White background for dark mode
                             ),
                             keyboardType: TextInputType.phone,
                           ),
@@ -790,29 +859,46 @@ class _DetailingPageState extends State<DetailingPage> {
                           const SizedBox(height: 8),
                           DropdownButtonFormField<String>(
                             initialValue: _selectedVehicleType,
-                            style: TextStyle(color: Colors.black), // Black text for selected value
+                            style: TextStyle(
+                              color: Colors.black,
+                            ), // Black text for selected value
                             decoration: InputDecoration(
-                              hintText: localeProvider.translate('selectVehicleType'),
-                              hintStyle: TextStyle(color: Colors.black.withOpacity(0.6)), // Black placeholder
+                              hintText: localeProvider.translate(
+                                'selectVehicleType',
+                              ),
+                              hintStyle: TextStyle(
+                                color: Colors.black.withOpacity(0.6),
+                              ), // Black placeholder
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide(color: Colors.grey.shade300),
+                                borderSide: BorderSide(
+                                  color: Colors.grey.shade300,
+                                ),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide(color: Colors.grey.shade300),
+                                borderSide: BorderSide(
+                                  color: Colors.grey.shade300,
+                                ),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide(color: Colors.blue, width: 2),
+                                borderSide: BorderSide(
+                                  color: Colors.blue,
+                                  width: 2,
+                                ),
                               ),
                               filled: true,
-                              fillColor: Colors.white, // White background for dark mode
+                              fillColor: Colors
+                                  .white, // White background for dark mode
                             ),
                             items: _vehicleTypes.map((type) {
                               return DropdownMenuItem<String>(
                                 value: type,
-                                child: Text(type, style: TextStyle(color: Colors.black)), // Black dropdown text
+                                child: Text(
+                                  type,
+                                  style: TextStyle(color: Colors.black),
+                                ), // Black dropdown text
                               );
                             }).toList(),
                             onChanged: (value) {
@@ -823,7 +909,7 @@ class _DetailingPageState extends State<DetailingPage> {
                           ),
                           const SizedBox(height: 20),
                           Text(
-                            'Plan Type',
+                            localeProvider.translate('planType'),
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
@@ -833,29 +919,44 @@ class _DetailingPageState extends State<DetailingPage> {
                           const SizedBox(height: 8),
                           DropdownButtonFormField<String>(
                             initialValue: _selectedPlanType,
-                            style: TextStyle(color: Colors.black), // Black text for selected value
+                            style: TextStyle(
+                              color: Colors.black,
+                            ), // Black text for selected value
                             decoration: InputDecoration(
-                              hintText: 'Select Plan Type',
-                              hintStyle: TextStyle(color: Colors.black.withOpacity(0.6)), // Black placeholder
+                              hintText: localeProvider.translate('selectPlanType'),
+                              hintStyle: TextStyle(
+                                color: Colors.black.withOpacity(0.6),
+                              ), // Black placeholder
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide(color: Colors.grey.shade300),
+                                borderSide: BorderSide(
+                                  color: Colors.grey.shade300,
+                                ),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide(color: Colors.grey.shade300),
+                                borderSide: BorderSide(
+                                  color: Colors.grey.shade300,
+                                ),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide(color: Colors.blue, width: 2),
+                                borderSide: BorderSide(
+                                  color: Colors.blue,
+                                  width: 2,
+                                ),
                               ),
                               filled: true,
-                              fillColor: Colors.white, // White background for dark mode
+                              fillColor: Colors
+                                  .white, // White background for dark mode
                             ),
                             items: _planTypes.map((type) {
                               return DropdownMenuItem<String>(
                                 value: type,
-                                child: Text(type, style: TextStyle(color: Colors.black)), // Black dropdown text
+                                child: Text(
+                                  type,
+                                  style: TextStyle(color: Colors.black),
+                                ), // Black dropdown text
                               );
                             }).toList(),
                             onChanged: (value) {
@@ -911,7 +1012,8 @@ class _DetailingPageState extends State<DetailingPage> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
                                     children: [
                                       Text(
                                         'Cost',
@@ -928,7 +1030,9 @@ class _DetailingPageState extends State<DetailingPage> {
                                           height: 1,
                                           color: Colors.grey.shade300,
                                         ),
-                                        items: _exchangeRates.keys.map((currency) {
+                                        items: _exchangeRates.keys.map((
+                                          currency,
+                                        ) {
                                           return DropdownMenuItem<String>(
                                             value: currency,
                                             child: Text(currency),
@@ -967,30 +1071,46 @@ class _DetailingPageState extends State<DetailingPage> {
                           const SizedBox(height: 8),
                           TextField(
                             controller: _locationController,
-                            style: TextStyle(color: Colors.black), // Black input text
+                            style: TextStyle(
+                              color: Colors.black,
+                            ), // Black input text
                             decoration: InputDecoration(
-                              hintText: localeProvider.translate('enterServiceLocation'),
-                              hintStyle: TextStyle(color: Colors.black.withOpacity(0.6)), // Black placeholder
+                              hintText: localeProvider.translate(
+                                'enterServiceLocation',
+                              ),
+                              hintStyle: TextStyle(
+                                color: Colors.black.withOpacity(0.6),
+                              ), // Black placeholder
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide(color: Colors.grey.shade300),
+                                borderSide: BorderSide(
+                                  color: Colors.grey.shade300,
+                                ),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide(color: Colors.grey.shade300),
+                                borderSide: BorderSide(
+                                  color: Colors.grey.shade300,
+                                ),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide(color: Colors.blue, width: 2),
+                                borderSide: BorderSide(
+                                  color: Colors.blue,
+                                  width: 2,
+                                ),
                               ),
                               filled: true,
-                              fillColor: Colors.white, // White background for dark mode
+                              fillColor: Colors
+                                  .white, // White background for dark mode
                             ),
                           ),
                           const SizedBox(height: 30),
                           Center(
                             child: adaptiveButton(
-                              localeProvider.translate('requestDetailingService'),
+                              localeProvider.translate(
+                                'requestDetailingService',
+                              ),
                               _isFormValid ? _submitDetailingRequest : null,
                               isEnabled: _isFormValid,
                             ),

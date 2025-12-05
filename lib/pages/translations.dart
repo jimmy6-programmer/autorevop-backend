@@ -100,6 +100,9 @@ const Map<String, Map<String, String>> translations = {
         'Detailing service request submitted successfully. We will contact you soon.',
     'planType': 'Plan Type',
     'selectPlanType': 'Select Plan Type',
+    "deleteAccount": "Delete Account",
+    "specifyIssue": "Specify your issue.",
+    "describeIssue": "Describe your specific issue",
   },
   'fr': {
     'home': 'Accueil',
@@ -188,8 +191,12 @@ const Map<String, Map<String, String>> translations = {
     'requestService': 'Demander le service',
     'detailingSuccessMessage':
         'Demande de service de détail soumise avec succès. Nous vous contacterons bientôt.',
-    'planType': 'Type de Plan',
-    'selectPlanType': 'Sélectionner le Type de Plan',
+    "planType": "Type de plan",
+    "selectPlanType": "Sélectionner le type de plan",
+    "deleteAccount": "Supprimer le compte",
+    "logout": "Se déconnecter",
+    "specifyIssue": "Spécifiez votre problème.",
+    "describeIssue": "Décrivez votre problème spécifique",
   },
   'rw': {
     'home': 'Ahabanza',
@@ -278,6 +285,10 @@ const Map<String, Map<String, String>> translations = {
         'Gusaba serivisi yo gusukura byoherejwe neza. Tuzagusangana vuba.',
     'planType': 'Ubwoko bw\'Igenamigambi',
     'selectPlanType': 'Hitamo Ubwoko bw\'Igenamigambi',
+    'deleteAccount': 'Siba Konti',
+    "logout": "Gusohoka",
+    "specifyIssue": "Sobanura ikibazo cyawe.",
+    "describeIssue": "Sobanura ikibazo cyawe neza",
   },
   'sw': {
     'home': 'Nyumbani',
@@ -366,5 +377,9 @@ const Map<String, Map<String, String>> translations = {
         'Ombi la huduma ya utengenezaji limewasilishwa vizuri. Tutawasiliana nawe hivi karibuni.',
     'planType': 'Aina ya Mpango',
     'selectPlanType': 'Chagua Aina ya Mpango',
+    "deleteAccount": "Futa Akaunti",
+    "logout": "Toka",
+    "specifyIssue": "Taja tatizo lako.",
+    "describeIssue": "Eleza tatizo lako maalum",
   },
 };

@@ -144,11 +144,12 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   void _showDeleteAccountDialog(BuildContext context) {
+    final localeProvider = Provider.of<LocaleProvider>(context, listen: false);
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Delete Account'),
+          title: Text(localeProvider.translate('deleteAccount')),
           content: const Text(
             'Are you sure you want to delete your account? This action cannot be undone and all your data will be permanently removed.',
           ),
@@ -311,8 +312,8 @@ class _ProfilePageState extends State<ProfilePage> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
-                  child: const Text(
-                    'Delete Account',
+                  child: Text(
+                    localeProvider.translate('deleteAccount'),
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                 ),

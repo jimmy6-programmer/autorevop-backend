@@ -751,7 +751,7 @@ class _MechanicsPageState extends State<MechanicsPage> {
                     // Custom Issue Field - only show if "Other" is selected
                     if (_selectedService?.name == 'Other') ...[
                       Text(
-                        'Specify your issue',
+                        localeProvider.translate('specifyIssue'),
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -761,7 +761,7 @@ class _MechanicsPageState extends State<MechanicsPage> {
                       const SizedBox(height: 8),
                       CupertinoTextField(
                         controller: _customIssueController,
-                        placeholder: 'Describe your specific issue',
+                        placeholder: localeProvider.translate('describeIssue'),
                         placeholderStyle: TextStyle(color: Colors.grey),
                         style: TextStyle(color: Colors.black),
                         decoration: BoxDecoration(
@@ -1076,7 +1076,7 @@ class _MechanicsPageState extends State<MechanicsPage> {
                   // Custom Issue Field - only show if "Other" is selected
                   if (_selectedService?.name == 'Other') ...[
                     Text(
-                      'Specify your issue',
+                      localeProvider.translate('specifyIssue'),
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -1087,7 +1087,7 @@ class _MechanicsPageState extends State<MechanicsPage> {
                     TextField(
                       controller: _customIssueController,
                       decoration: InputDecoration(
-                        hintText: 'Describe your specific issue',
+                        hintText: localeProvider.translate('describeIssue'),
                         border: const UnderlineInputBorder(),
                         enabledBorder: const UnderlineInputBorder(
                           borderSide: BorderSide(color: Colors.grey),

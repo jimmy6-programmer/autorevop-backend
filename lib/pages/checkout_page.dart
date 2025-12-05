@@ -8,6 +8,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:provider/provider.dart';
+import '../providers/cart_provider.dart';
 
 
 class CheckoutPage extends StatefulWidget {
@@ -266,6 +268,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
   @override
   Widget build(BuildContext context) {
+    final cartProvider = Provider.of<CartProvider>(context);
     final totalItems = widget.orderedParts.length;
     final totalPrice = widget.orderedParts.fold(0.0, (sum, part) => sum + (part.price * part.quantity));
 
@@ -362,7 +365,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                           ),
                           const SizedBox(height: 12),
                           Text(
-                            "\$${totalPrice.toStringAsFixed(2)}",
+                            cartProvider.formatPrice(totalPrice),
                             style: const TextStyle(
                               color: Colors.black,
                               fontSize: 18,
@@ -381,7 +384,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                 ),
                               ),
                               Text(
-                                "\$${totalPrice.toStringAsFixed(2)}",
+                                cartProvider.formatPrice(totalPrice),
                                 style: const TextStyle(
                                   fontSize: 14,
                                   color: Colors.blue,
@@ -422,7 +425,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                 ),
                               ),
                               Text(
-                                "\$${totalPrice.toStringAsFixed(2)}",
+                                cartProvider.formatPrice(totalPrice),
                                 style: const TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
@@ -612,7 +615,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          "\$${totalPrice.toStringAsFixed(2)}",
+                          cartProvider.formatPrice(totalPrice),
                           style: const TextStyle(
                             color: Colors.red,
                             fontSize: 18,
@@ -628,7 +631,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                               style: const TextStyle(fontSize: 14),
                             ),
                             Text(
-                              "\$${totalPrice.toStringAsFixed(2)}",
+                              cartProvider.formatPrice(totalPrice),
                               style: const TextStyle(fontSize: 14),
                             ),
                           ],
@@ -659,7 +662,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                               ),
                             ),
                             Text(
-                              "\$${totalPrice.toStringAsFixed(2)}",
+                              cartProvider.formatPrice(totalPrice),
                               style: const TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,

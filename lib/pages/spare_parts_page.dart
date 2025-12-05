@@ -133,6 +133,7 @@ class _SparePartsPageState extends State<SparePartsPage> {
   @override
   Widget build(BuildContext context) {
     final localeProvider = Provider.of<LocaleProvider>(context);
+    final cartProvider = Provider.of<CartProvider>(context);
 
     // Responsive grid columns
     final screenWidth = MediaQuery.of(context).size.width;
@@ -175,6 +176,99 @@ class _SparePartsPageState extends State<SparePartsPage> {
                       style: const TextStyle(color: Colors.black),
                       backgroundColor: Colors.white,
                       borderRadius: BorderRadius.circular(8.0),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                    alignment: Alignment.centerLeft,
+                    child: CupertinoButton(
+                      padding: EdgeInsets.zero,
+                      onPressed: () {
+                        showCupertinoModalPopup(
+                          context: context,
+                          builder: (BuildContext context) => Container(
+                            height: 250,
+                            color: CupertinoColors.systemBackground,
+                            child: Column(
+                              children: [
+                                Container(
+                                  height: 50,
+                                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                                  decoration: BoxDecoration(
+                                    border: Border(
+                                      bottom: BorderSide(
+                                        color: CupertinoColors.separator,
+                                        width: 0.5,
+                                      ),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      CupertinoButton(
+                                        padding: EdgeInsets.zero,
+                                        onPressed: () => Navigator.of(context).pop(),
+                                        child: const Text('Cancel'),
+                                      ),
+                                      const Text(
+                                        'Select Currency',
+                                        style: TextStyle(
+                                          fontSize: 17,
+                                          fontWeight: FontWeight.w600,
+                                          color: CupertinoColors.label,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 60), // Balance the layout
+                                    ],
+                                  ),
+                                ),
+                                Expanded(
+                                  child: CupertinoPicker(
+                                    itemExtent: 44.0,
+                                    onSelectedItemChanged: (int index) {
+                                      final currencies = cartProvider.exchangeRates.keys.toList();
+                                      cartProvider.setCurrency(currencies[index]);
+                                    },
+                                    children: cartProvider.exchangeRates.keys.map((currency) {
+                                      final isSelected = currency == cartProvider.selectedCurrency;
+                                      final displayName = currency == 'RWF' ? 'RWF' : currency;
+                                      return Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                                        child: Text(
+                                          displayName,
+                                          style: TextStyle(
+                                            fontSize: 17,
+                                            color: isSelected ? CupertinoColors.activeBlue : CupertinoColors.label,
+                                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                                          ),
+                                        ),
+                                      );
+                                    }).toList(),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            cartProvider.selectedCurrency,
+                            style: const TextStyle(
+                              color: CupertinoColors.activeBlue,
+                              fontSize: 16,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          const Icon(
+                            CupertinoIcons.chevron_down,
+                            size: 16,
+                            color: CupertinoColors.activeBlue,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   Expanded(
@@ -249,6 +343,22 @@ class _SparePartsPageState extends State<SparePartsPage> {
                       filled: true,
                       fillColor: Colors.grey[200],
                     ),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                  alignment: Alignment.centerLeft,
+                  child: DropdownButton<String>(
+                    value: cartProvider.selectedCurrency,
+                    onChanged: (value) => cartProvider.setCurrency(value!),
+                    items: cartProvider.exchangeRates.keys.map((currency) => DropdownMenuItem(
+                      value: currency,
+                      child: Text(currency == 'RWF' ? 'RWF (Rwandan Franc)' : currency),
+                    )).toList(),
+                    underline: Container(),
+                    icon: Icon(Icons.arrow_drop_down),
+                    style: const TextStyle(color: Colors.black, fontSize: 16),
+                    dropdownColor: Colors.white,
                   ),
                 ),
                 Expanded(
@@ -352,13 +462,17 @@ class _SparePartsPageState extends State<SparePartsPage> {
                   ),
                   const SizedBox(height: 4),
                   // Price
-                  Text(
-                    '\$${part.price.toStringAsFixed(2)}',
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: CupertinoColors.systemRed,
-                    ),
+                  Consumer<CartProvider>(
+                    builder: (context, cartProvider, child) {
+                      return Text(
+                        cartProvider.formatPrice(part.price),
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: CupertinoColors.systemRed,
+                        ),
+                      );
+                    },
                   ),
                   const Spacer(),
                   // Add to cart button

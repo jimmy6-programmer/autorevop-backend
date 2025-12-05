@@ -176,7 +176,7 @@ class _CartPageState extends State<CartPage> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '\$${item.price.toStringAsFixed(2)}',
+                  cartProvider.formatPrice(item.price),
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
@@ -225,7 +225,7 @@ class _CartPageState extends State<CartPage> {
               ),
               const SizedBox(height: 8),
               Text(
-                '\$${(item.price * item.quantity).toStringAsFixed(2)}',
+                cartProvider.formatPrice(item.price * item.quantity),
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
@@ -280,7 +280,7 @@ class _CartPageState extends State<CartPage> {
                 ),
               ),
               Text(
-                '\$${cartProvider.totalPrice.toStringAsFixed(2)}',
+                cartProvider.formatPrice(cartProvider.totalPrice),
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -323,7 +323,7 @@ class _CartPageState extends State<CartPage> {
                 ),
               ),
               Text(
-                '\$${cartProvider.totalPrice.toStringAsFixed(2)}',
+                cartProvider.formatPrice(cartProvider.totalPrice),
                 style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
